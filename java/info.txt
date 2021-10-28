@@ -1,0 +1,58 @@
+name.java
+kompilacja javac name.java
+
+name musi byc nazwa publicznej klasy
+
+keyword:
+static - mozna sie odwolywac uzywajac tylko nazwy klasy, nie instancji tej klasy
+final - moge tylko raz przypisac pointer do tej zmiennej ale moge edytowac ta zmienna
+to oznacza, ze majac public final static Punkt ZERO = new Punkt(0,0); jest okej
+moge potem zrobic Punkt.ZERO.przesun(2,3) mimo, ze to zmieni wartosc w punkcie ZERO
+ale nie moge zrobić potem Punkt.ZERO = new Punkt(1,1); !!!
+
+class punkt{
+ double x, y;
+
+ punkt(){//default
+  this(1,1); //konstruktor dereferencyjny??? wykorzystuje inny
+  //tu mozna dopiero robic cos nowego, np ustawic zmienna jaka ten wyzszy nie ustawil
+ }
+ punkt(double x, double y){
+  this.x = x;
+  this.y = y;
+ }
+ punkt(String... t){
+  for(String s : t)...
+//initializer list, nie mamy okreslonej ilosci elem, musi byc ostatnim przeciazeniem funkcji!
+ }
+
+  @Override
+  public String ToString(){
+    return "( " + x + ", " + y + ") ";
+  }
+
+}
+
+
+teraz np w main mozna miec
+
+punkt p = new punkt(5,3);
+System.out.println(p); //i to samo skorzysta z ToString!
+
+
+jak mamy:
+class test{
+ double x = 5;
+
+ {
+  x=7; //kod inicjalizatora
+ }
+
+ test(){
+
+ }
+
+}
+
+to robi sie w kolejnosci, najpierw x=5, potem nadpisane przez x=7
+gdyby bylo cos w konstruktorze to on by nadpisal wszystko wczesniej
