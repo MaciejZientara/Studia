@@ -11,6 +11,11 @@
 static const int BEAT = 1000000/TEMPO;
 
 #define BUZZER 2
+static const int8_t PORTS[BUZZER] = {_BV(PB5),_BV(PB4)};
+static int DELAYS[BUZZER];          //TIMER1    set in polling, how long a note for a given buzzer lasts
+static int8_t FLAGS;                //TIMER1    set in interrupt, buzzer note done
+static int COUNTERS[BUZZER];        //TIMER0    set in polling, -- in TIMER0, if==0 in polling
+static int16_t FREQUENCIES[BUZZER]; //TIMER0    set in polling, used to set COUNTERS
 
 //frequency in Hz
 static const int16_t notes[][]={                    // C D E F G A B : 0-8
@@ -23,9 +28,12 @@ static const int16_t notes[][]={                    // C D E F G A B : 0-8
   {24, 49, 98,  196, 392, 783, 1567, 3135, 6271}    //G
 };// ['A'-note]['0'-octave]
 
-static const char song[] PROGMEM = "";
+static const char song[][] PROGMEM = {
+  ""
+};
 
 void playSong(){
+  FLAGS = (1<<BUZZER)-1;//make all buzzers receive first note
   for(int i=0; i<sizeof(song); i+=3){
     char note = pgm_read_byte(&song[i]), octave = pgm_read_byte(&song[i+1]), duration = pgm_read_byte(&song[i+2]);
     int16_t frequency = notes['A'-note]['0'-octave] * 2;
@@ -44,6 +52,8 @@ void playSong(){
 
   }
 
+
+  _delay_ms(5000);
 }
 
 #define TONE(step, delay) \
