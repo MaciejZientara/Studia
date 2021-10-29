@@ -1,6 +1,6 @@
 #include <avr/io.h>
 #include <util/delay.h>
-#include<avr/interrupt.h>
+#include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 
 #define BUZZ PB5
@@ -32,7 +32,7 @@ static const int16_t notes[][9]={                    // C D E F G A B : 0-8
 };// ['A'-note]['0'-octave]
 
 static const char song[BUZZER][30] PROGMEM = {
-  "G3eG3eG3eA3eB3hG3eG3eG3eA3eB3h"
+  "C2SG3eG3eA3eB3hG3eG3eG3eA3eB3h"
 };
 
 
@@ -40,6 +40,7 @@ ISR (TIMER0_OVF_vect){    // Timer0 ISR
   for(int8_t i=0; i<BUZZER; i++){
     COUNTERS[i]--;
   }
+  BUZZ_PORT ^= PORTS[0];
 }
 
 ISR (TIMER1_OVF_vect){    // Timer1 ISR
@@ -88,8 +89,9 @@ void playSong(){
           case 'e'://eighth note = BEAT/2
             DELAYS[B] = BEAT >> 1;
             break;
-          default:
+          default://'S' - start
             DELAYS[B] = BEAT;
+            TCNT1 = 65535-BEAT;
             break;
           }
         }
@@ -128,7 +130,7 @@ int main() {
   TIMSK0 = (1 << TOIE0); // Enable timer0 overflow interrupt(TOIE0)
 
   TCCR1A = 0x00;
-	TCCR1B = (1<<CS10) | (1<<CS12);  // Timer mode with 1024 prescsler
+	TCCR1B = (1<<CS10) | (1<<CS12);  // Timer mode with 1024 prescaler
 	TIMSK1 = (1 << TOIE1);   // Enable timer1 overflow interrupt(TOIE1)
 
 
