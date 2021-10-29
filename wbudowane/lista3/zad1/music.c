@@ -8,17 +8,8 @@
 #define BUZZ_PORT PORTB
 
 #define TEMPO 120
-static const int BEAT = 937500/TEMPO;
-//16'000'000 / (preScalar*BEAT) = (TEMPO/60), where TCNT1 = 65535 - BEAT
-
-#define BUZZER 1
-static const int8_t PORTS[BUZZER] = {_BV(PB5)/*,_BV(PB4)*/};
-static int DELAYS[BUZZER];          //TIMER1    set in polling, how long a note for a given buzzer lasts
-static int8_t FLAGS;                //TIMER1    set in interrupt, buzzer note done
-static int COUNTERS[BUZZER];        //TIMER0    set in polling, -- in TIMER0, if==0 in polling
-static int16_t FREQUENCIES[BUZZER]; //TIMER0    set in polling, used to set COUNTERS
-static int INDEXES[BUZZER];         //          set in polling, which index of song we need to read for given buzzer
-static int8_t LAST;                 //TIMER1    used to set flag for the buzzer that note has ended - number of the buzzer
+static const int BEAT = (60*1000000)/TEMPO;
+volatile int16_t FREQUENCY = 0;
 
 //frequency in Hz
 static const int16_t notes[][9]={                    // C D E F G A B : 0-8
@@ -31,79 +22,51 @@ static const int16_t notes[][9]={                    // C D E F G A B : 0-8
   {24, 49, 98,  196, 392, 783, 1567, 3135, 6271}    //G
 };// ['A'-note]['0'-octave]
 
-static const char song[BUZZER][30] PROGMEM = {
-  "C2SG3eG3eA3eB3hG3eG3eG3eA3eB3h"
+static const char song[] PROGMEM = {
+"G3e  qG3e  qG3e  qG3e  qA3e  q"
 };
 
-
-ISR (TIMER0_OVF_vect){    // Timer0 ISR
-  for(int8_t i=0; i<BUZZER; i++){
-    COUNTERS[i]--;
-  }
-  BUZZ_PORT ^= PORTS[0];
-}
-
 ISR (TIMER1_OVF_vect){    // Timer1 ISR
-  FLAGS|=_BV(LAST);
-
-  for(int i=0; i<BUZZER; i++)
-    DELAYS[i]-=DELAYS[LAST];
-
-  int16_t tmp = 10000;
-  for(int i=0; i<BUZZER; i++)
-    if(DELAYS[i]>0){
-      if(DELAYS[i]<tmp){
-        LAST = i;
-        tmp = DELAYS[i];
-      }
-    }
-    else
-      FLAGS|=_BV(i);
-
-  TCNT1 = 65535-DELAYS[LAST];
+  BUZZ_PORT ^= _BV(BUZZ);
+  TCNT1 = FREQUENCY;
 }
 
 void playSong(){
-  FLAGS = (1<<BUZZER)-1;//make all buzzers receive first note
-  for(int i=0; i<BUZZER; i++) INDEXES[i]=0;
-
-  while(1){
-    if(FLAGS){
-      int8_t finished = 1;
-      for(int B=0; B<BUZZER; B++){
-        if((FLAGS & _BV(B)) && (INDEXES[B]<sizeof(song[B]))){
-          char note = pgm_read_byte(&song[B][INDEXES[B]]), octave = pgm_read_byte(&song[B][INDEXES[B]+1]), duration = pgm_read_byte(&song[B][INDEXES[B]+2]);
-          FREQUENCIES[B] = notes['A'-note]['0'-octave] * 2;
-          INDEXES[B]+=3;
-          finished = 0;
-          switch (duration){
-          case 'w'://whole note = 4 BEATS
-            DELAYS[B] = BEAT << 2;
-            break;
-          case 'h'://half note = 2 BEATS
-            DELAYS[B] = BEAT << 1;
-            break;
-          case 'q'://quarter note = 1 BEAT
-            DELAYS[B] = BEAT;
-            break;
-          case 'e'://eighth note = BEAT/2
-            DELAYS[B] = BEAT >> 1;
-            break;
-          default://'S' - start
-            DELAYS[B] = BEAT;
-            TCNT1 = 65535-BEAT;
-            break;
-          }
-        }
-      }
-      if(finished)
-        break;
+  for(int i=0; i<sizeof(song); i+=3){
+    BUZZ_PORT &= ~_BV(BUZZ);
+    char note = pgm_read_byte(&song[i]), octave = pgm_read_byte(&song[i+1]), duration = pgm_read_byte(&song[i+2]);
+    if(note!=' ' && octave!=' '){
+      FREQUENCY = 65535 - 15625/(notes['A'-note]['0'-octave]);
+      sei();  //turn on interrupts
+      TCNT1 = 65535;
     }
-    for(int B=0; B<BUZZER; B++){
-      if(COUNTERS[B]<=0){
-        BUZZ_PORT ^= PORTS[B];
-        COUNTERS[B] = 62500/FREQUENCIES[B]; //  16'000'000/256 = 62500
-      }
+
+    switch (duration){
+      case 'w'://whole note = 4 BEATS
+        _delay_us(BEAT << 2);
+        cli();  //turn off interrupts
+        _delay_us(BEAT << 2);
+        break;
+      case 'h'://half note = 2 BEATS
+        _delay_us(BEAT << 1);
+        cli();  //turn off interrupts
+        _delay_us(BEAT << 1);
+        break;
+      case 'q'://quarter note = 1 BEAT
+        _delay_us(BEAT);
+        cli();  //turn off interrupts
+        _delay_us(BEAT);
+        break;
+      case 'e'://eighth note = BEAT/2
+        _delay_us(BEAT >> 1);
+        cli();  //turn off interrupts
+        _delay_us(BEAT >> 1);
+        break;
+      default:
+        _delay_us(BEAT);
+        cli();  //turn off interrupts
+        _delay_us(BEAT);
+        break;
     }
   }
   //   /*
@@ -120,21 +83,13 @@ void playSong(){
 // https://musescore.com/user/189765/scores/5001579
 
 int main() {
-  for(int i=0; i<BUZZER; i++)
-    BUZZ_DDR |= PORTS[i];
-
-
-  //read 108, 132+134 from datasheet
-  TCCR0A = 0x00;
-  TCCR0B = 0x00; //no prescaler
-  TIMSK0 = (1 << TOIE0); // Enable timer0 overflow interrupt(TOIE0)
+  BUZZ_DDR |= _BV(BUZZ);
 
   TCCR1A = 0x00;
 	TCCR1B = (1<<CS10) | (1<<CS12);  // Timer mode with 1024 prescaler
 	TIMSK1 = (1 << TOIE1);   // Enable timer1 overflow interrupt(TOIE1)
 
-
-	sei();        // Enable global interrupts by setting global interrupt enable bit in SREG
+	// sei();        // Enable global interrupts by setting global interrupt enable bit in SREG
 
   while (1) {
     playSong();
