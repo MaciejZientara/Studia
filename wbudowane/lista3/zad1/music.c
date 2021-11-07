@@ -8,10 +8,8 @@ static const int8_t BUZZ = _BV(PB5);
 #define BUZZ_DDR DDRB
 #define BUZZ_PORT PORTB
 
-#define CPU_F 16000000
 #define TEMPO 120
-static const int BEAT = (60*1000)/TEMPO;
-volatile int16_t COUNTER = 0;
+static const int BEAT = (60*1000000)/TEMPO;
 
 //frequency in Hz
 static const uint16_t notes[][9]={                    // C D E F G A B : 0-8
@@ -24,66 +22,31 @@ static const uint16_t notes[][9]={                    // C D E F G A B : 0-8
   {24, 49, 98,  196, 392, 783, 1567, 3135, 6271}    //G
 };// ['A'-note]['0'-octave]
 
-static const char song[] PROGMEM = 
-  // "A3wB3wC4wD4wE4wF4wG4w"
-"C0wC0wC0wC0wC0w  w  w  wC1wC1wC1wC1wC1w  w  w  wC2wC2wC2wC2wC2w  w  w  wC3wC3wC3wC3wC3w"
-// "C0wD0wE0wF0wG0wA0wB0wC6wD6wE6wF6wG6wA6wB6w"
+static const char song[] PROGMEM = "D5q  eF5q  hD5q  e";
 // "G3e   G3e   G3e   G3e   A3e   G3e   G3e   G3e   G3e   A3e   G3e   G3e   G3e   G3e   A3e   G3e   G3e   G3e   G3e   A3e   "
-;
+// "A2wB2wC3wD3wE3wF3wG3w"
+// "A4w  wB4w  wC4w  wD5w  wE5w  wF5w  wG5w  w"
+// "A4wB4wC4wD4wE4wF4wG4w"
+// "C0wC0wC0wC0wC0w  w  w  wC1wC1wC1wC1wC1w  w  w  wC2wC2wC2wC2wC2w  w  w  wC3wC3wC3wC3wC3w"
+// "C0wD0wE0wF0wG0wA0wB0wC6wD6wE6wF6wG6wA6wB6w"
 
+//the best? A4, B, C, D5, F5, G5
 
-
-void StartTimer(){
-  TIMSK1 |= _BV(OCIE1A);// enable the interrupt
+void Delay(uint16_t d){
+  do{
+    _delay_us(1);
+  }while(--d);
 }
 
-void StopTimer(){
-  TIMSK1 &= ~_BV(OCIE1A);// disable the interrupt
-}
-
-int8_t isPlaying(){
-  return TIMSK1 & _BV(OCIE1A);// are interrupts enabled?
-}
-
-
-
-ISR(TIMER1_COMPA_vect){
-  if(COUNTER > 0){
-    BUZZ_PORT ^= BUZZ;
-    COUNTER--;
-  }
-  else{
-    StopTimer();
-    BUZZ_PORT &= ~BUZZ;// keep pin low after stop
-  }
-}
-
-
-
-// frequency in hertz, duration in milliseconds
 void playNote(uint16_t frequency, uint32_t duration){
-  uint8_t prescalarbits = 0b001; //no prescalar
-  int32_t toggle_count = 0;
-  uint32_t ocr = 0;
+  uint16_t counter = (duration/frequency)>>1;
 
-  ocr = CPU_F / frequency / 2 - 1;
-
-  if (ocr > 0xffff){
-    ocr = CPU_F / frequency / 2 / 64 - 1;
-    prescalarbits = 0b011; //prescalar = 64
+  while(counter--){
+      BUZZ_PORT |= BUZZ;
+      Delay(frequency);
+      BUZZ_PORT &= ~BUZZ;
+      Delay(frequency);
   }
-
-  TCCR1B = (TCCR1B & 0b11111000) | prescalarbits; //set proper prescalar
-
-  // Calculate the toggle count
-  if (duration > 0)
-    toggle_count = 2 * frequency * duration / 1000;
-  else
-    toggle_count = -1;
-
-  OCR1A = ocr;
-  COUNTER = toggle_count;
-  StartTimer();
 }
 
 // https://pages.mtu.edu/~suits/notefreqs.html
@@ -115,25 +78,16 @@ void playSong(){
     }
 
     if(note!=' ' && octave!=' ')//not pause
-      playNote(notes['A'-note]['0'-octave], dur);
+      playNote(1000000/notes['A'-note]['0'-octave], dur);
     else
-      _delay_ms(BEAT<<1/*dur*/); // TODO wait for dur, not BEAT<<1
-
-    while(isPlaying());//wait to stop playing current note
+      Delay(dur);
   }
-  // _delay_ms(10000);
+  _delay_ms(10000);
 }
 
 
 int main() {
   BUZZ_DDR |= BUZZ;
-
-  TCCR1A = 0;
-	TCCR1B = _BV(CS10) | _BV(WGM12); //no prescalar
-  //RCCR1A=0 + WGM12 in TCCR1B = mode4 in table 16-4 page 133 data sheet
-
-	sei(); // Enable global interrupts by setting global interrupt enable bit in SREG
-
   while (1) {
     playSong();
   }

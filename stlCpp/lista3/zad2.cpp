@@ -26,7 +26,7 @@ int main(){
     cout << "float " << a << "\n";
     cout << "double " << b << "\n";
 
-    a=1.0;
+    a=1.0f;
     b=1.0;
 
     cout << "float " << a << "\n";
@@ -44,8 +44,8 @@ int main(){
     // printf("%lx\n",B);
     memcpy(&b,&B,sizeof(B));
     
-    cout << "float " << setprecision(7) << a << "\n";
-    cout << "double " << setprecision(14) << b << "\n";
+    cout << "float " << setprecision(7) << a-1.0f << "\n";
+    cout << "double " << setprecision(14) << b-1.0 << "\n";
 
     A = 0x7f7fffff;
     B = 0x7fefffffffffffff;
