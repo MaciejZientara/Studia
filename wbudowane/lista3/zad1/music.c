@@ -24,8 +24,8 @@ static const uint16_t notes[][9]={                    // C D E F G A B : 0-8
 };// ['A'-note]['0'-octave]
 
 //"awbwcwdwewfwgwAwBwCwDwEwFwGw";
-static const char song[] PROGMEM = "gefegedebedeaqgefegedebedeaqgeAeBeAeBegeAegeAefegefegedegqgefegedebedeaqgefegedebedeaqgeAeBeAeBegeAegeAefegefegedegqgefegefegeAeBqDeCeDeBefeBedqDeCeDeBefeBedqDeEeFeEeFeDeEeDeEeCeDeCeDeBeDqDeCeDeBefeBedqDeCeDeBefeBedqDeEeFeEeFeDeEeDeEeCeDeCeDeBeDqDeCeDeCeAeCeDqgefe";
 
+static const char song[] PROGMEM = "gefegedebedeaqgefegedebedeaqgeAeBeAeBegeAegeAefegefegedegqgefegedebedeaqgefegedebedeaqgeAeBeAeBegeAegeAefegefegedegqgefegefegeAeBqDeCeDeBefeBedqDeCeDeBefeBedqDeEeFeEeFeDeEeDeEeCeDeCeDeBeDqDeCeDeBefeBedqDeCeDeBefeBedqDeEeFeEeFeDeEeDeEeCeDeCeDeBeDqDeCeDeCeAeCeDqgefegedebsdsdtasaqgefegedebsdsdtasaqgeAeBeAsBsBtBegsAegsAsAtAefsgefsgsgtgedsgqgefegedebsdsdtasaqgefegedebsdsdtasaqgeAeBeAsBsBtBegsAegsAsAtAefsgefsgsgtgedsgqgefegefsgsgtgeAsBqDeCeDeBefsBsBtdsdqDeCeDeBefsBsBtdsdqDeEeFeEsFsFtFeDsEeDsEsEtEeCsDeCsDsDtDeBsDqDeCeDeBefsBsBtdsdqDeCeDeBefsBsBtdsdqDeEeFeEsFsFtFeDsEeDsEsEtEeCsDeCsDsDtDeBsDqDeCeDeCsAeAsCeDh";
 static const uint32_t frequency[] = {1000000/440,1000000/493,1000000/523,1000000/587,1000000/659,1000000/698,1000000/783,1000000/880,1000000/987,1000000/1046,1000000/1174,1000000/1318,1000000/1396,1000000/1567};//A B C D E F G
 
 void Delay(char note){
@@ -91,6 +91,12 @@ void playNote(char note, uint32_t duration){
     case (BEAT>>1):
       _delay_us(BEAT>>1);
       break;
+    case (BEAT>>2):
+      _delay_us(BEAT>>2);
+      break;
+    case (BEAT>>3):
+      _delay_us(BEAT>>3);
+      break;
     default:
       _delay_us(BEAT);
       break;
@@ -113,7 +119,7 @@ void playNote(char note, uint32_t duration){
 
 // https://pages.mtu.edu/~suits/notefreqs.html
 // https://newt.phys.unsw.edu.au/jw/graphics/notes.GIF
-// https://musescore.com/user/189765/scores/5001579
+// https://musescore.com/user/28192851/scores/6323087
 // https://github.com/bhagman/Tone
 
 void playSong(){
@@ -133,6 +139,12 @@ void playSong(){
         break;
       case 'e'://eighth note = BEAT/2
         dur = BEAT >> 1;
+        break;
+      case 's'://sixteenth note = BEAT/4
+        dur = BEAT >> 2;
+        break;
+      case 't'://thirty-second note = BEAT/4
+        dur = BEAT >> 3;
         break;
       default:
         dur = BEAT;
