@@ -8,8 +8,9 @@ static const int8_t BUZZ = _BV(PB5);
 #define BUZZ_DDR DDRB
 #define BUZZ_PORT PORTB
 
-#define TEMPO 120
-static const int BEAT = (60*1000000)/TEMPO;
+#define BEAT 468750
+// #define TEMPO 128
+// BEAT = (60*1000000)/TEMPO;
 
 //frequency in Hz
 static const uint16_t notes[][9]={                    // C D E F G A B : 0-8
@@ -22,30 +23,91 @@ static const uint16_t notes[][9]={                    // C D E F G A B : 0-8
   {24, 49, 98,  196, 392, 783, 1567, 3135, 6271}    //G
 };// ['A'-note]['0'-octave]
 
-static const char song[] PROGMEM = "D5q  eF5q  hD5q  e";
-// "G3e   G3e   G3e   G3e   A3e   G3e   G3e   G3e   G3e   A3e   G3e   G3e   G3e   G3e   A3e   G3e   G3e   G3e   G3e   A3e   "
-// "A2wB2wC3wD3wE3wF3wG3w"
-// "A4w  wB4w  wC4w  wD5w  wE5w  wF5w  wG5w  w"
-// "A4wB4wC4wD4wE4wF4wG4w"
-// "C0wC0wC0wC0wC0w  w  w  wC1wC1wC1wC1wC1w  w  w  wC2wC2wC2wC2wC2w  w  w  wC3wC3wC3wC3wC3w"
-// "C0wD0wE0wF0wG0wA0wB0wC6wD6wE6wF6wG6wA6wB6w"
+//"awbwcwdwewfwgwAwBwCwDwEwFwGw";
+static const char song[] PROGMEM = "gefegedebedeaqgefegedebedeaqgeAeBeAeBegeAegeAefegefegedegqgefegedebedeaqgefegedebedeaqgeAeBeAeBegeAegeAefegefegedegqgefegefegeAeBqDeCeDeBefeBedqDeCeDeBefeBedqDeEeFeEeFeDeEeDeEeCeDeCeDeBeDqDeCeDeBefeBedqDeCeDeBefeBedqDeEeFeEeFeDeEeDeEeCeDeCeDeBeDqDeCeDeCeAeCeDqgefe";
 
-//the best? A4, B, C, D5, F5, G5
+static const uint32_t frequency[] = {1000000/440,1000000/493,1000000/523,1000000/587,1000000/659,1000000/698,1000000/783,1000000/880,1000000/987,1000000/1046,1000000/1174,1000000/1318,1000000/1396,1000000/1567};//A B C D E F G
 
-void Delay(uint16_t d){
-  do{
-    _delay_us(1);
-  }while(--d);
+void Delay(char note){
+  switch(note){
+  case 'a':
+    _delay_us(frequency[0]);
+    break;
+  case 'b':
+    _delay_us(frequency[1]);
+    break;
+  case 'c':
+    _delay_us(frequency[2]);
+    break;
+  case 'd':
+    _delay_us(frequency[3]);
+    break;
+  case 'e':
+    _delay_us(frequency[4]);
+    break;
+  case 'f':
+    _delay_us(frequency[5]);
+    break;
+  case 'g':
+    _delay_us(frequency[6]);
+    break;
+
+  case 'A':
+    _delay_us(frequency[7]);
+    break;
+  case 'B':
+    _delay_us(frequency[8]);
+    break;
+  case 'C':
+    _delay_us(frequency[9]);
+    break;
+  case 'D':
+    _delay_us(frequency[10]);
+    break;
+  case 'E':
+    _delay_us(frequency[11]);
+    break;
+  case 'F':
+    _delay_us(frequency[12]);
+    break;
+  case 'G':
+    _delay_us(frequency[13]);
+    break;
+  
+  default:
+    break;
+  }
 }
 
-void playNote(uint16_t frequency, uint32_t duration){
-  uint16_t counter = (duration/frequency)>>1;
+void playNote(char note, uint32_t duration){
+  if(note == ' '){    //pause duration
+    switch(duration){
+    case (BEAT<<2):
+      _delay_us(BEAT<<2);
+      break;
+    case (BEAT<<1):
+      _delay_us(BEAT<<1);
+      break;
+    case (BEAT>>1):
+      _delay_us(BEAT>>1);
+      break;
+    default:
+      _delay_us(BEAT);
+      break;
+    }
+    return;
+  }
+  uint32_t counter;
+  if(note >= 'a')
+    counter = (duration/(frequency[note-'a']))>>1;
+  else
+    counter = (duration/(frequency[note-'A'+7]))>>1;
 
   while(counter--){
       BUZZ_PORT |= BUZZ;
-      Delay(frequency);
+      Delay(note);
       BUZZ_PORT &= ~BUZZ;
-      Delay(frequency);
+      Delay(note);
   }
 }
 
@@ -55,8 +117,8 @@ void playNote(uint16_t frequency, uint32_t duration){
 // https://github.com/bhagman/Tone
 
 void playSong(){
-  for(int i=0; i<sizeof(song); i+=3){
-    char note = pgm_read_byte(&song[i]), octave = pgm_read_byte(&song[i+1]), duration = pgm_read_byte(&song[i+2]);
+  for(int i=0; i<sizeof(song); i+=2){
+    char note = pgm_read_byte(&song[i]), duration = pgm_read_byte(&song[i+1]);
 
     uint32_t dur;
     switch (duration){
@@ -77,10 +139,7 @@ void playSong(){
         break;
     }
 
-    if(note!=' ' && octave!=' ')//not pause
-      playNote(1000000/notes['A'-note]['0'-octave], dur);
-    else
-      Delay(dur);
+    playNote(note, dur);
   }
   _delay_ms(10000);
 }
