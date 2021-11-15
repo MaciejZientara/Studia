@@ -23,9 +23,8 @@ static const uint16_t notes[][9]={                    // C D E F G A B : 0-8
   {24, 49, 98,  196, 392, 783, 1567, 3135, 6271}    //G
 };// ['A'-note]['0'-octave]
 
-//"awbwcwdwewfwgwAwBwCwDwEwFwGw";
-
 static const char song[] PROGMEM = "gefegedebedeaqgefegedebedeaqgeAeBeAeBegeAegeAefegefegedegqgefegedebedeaqgefegedebedeaqgeAeBeAeBegeAegeAefegefegedegqgefegefegeAeBqDeCeDeBefeBedqDeCeDeBefeBedqDeEeFeEeFeDeEeDeEeCeDeCeDeBeDqDeCeDeBefeBedqDeCeDeBefeBedqDeEeFeEeFeDeEeDeEeCeDeCeDeBeDqDeCeDeCeAeCeDqgefegedebsdsdtasaqgefegedebsdsdtasaqgeAeBeAsBsBtBegsAegsAsAtAefsgefsgsgtgedsgqgefegedebsdsdtasaqgefegedebsdsdtasaqgeAeBeAsBsBtBegsAegsAsAtAefsgefsgsgtgedsgqgefegefsgsgtgeAsBqDeCeDeBefsBsBtdsdqDeCeDeBefsBsBtdsdqDeEeFeEsFsFtFeDsEeDsEsEtEeCsDeCsDsDtDeBsDqDeCeDeBefsBsBtdsdqDeCeDeBefsBsBtdsdqDeEeFeEsFsFtFeDsEeDsEsEtEeCsDeCsDsDtDeBsDqDeCeDeCsAeAsCeDh";
+
 static const uint32_t frequency[] = {1000000/440,1000000/493,1000000/523,1000000/587,1000000/659,1000000/698,1000000/783,1000000/880,1000000/987,1000000/1046,1000000/1174,1000000/1318,1000000/1396,1000000/1567};//A B C D E F G
 
 void Delay(char note){

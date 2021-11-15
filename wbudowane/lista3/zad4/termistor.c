@@ -64,7 +64,7 @@ FILE uart_file;
     T = B/(B/T0 - log(R0/R)) 
 */
 void printTemperature(uint16_t output){
-    const static float B=3300.0, BT0 = B/298.15;
+    const static float B=3000.0, BT0 = B/298.15;
     float R = (output * 2200.0) / (1023.0 - output);
 
     float temp = B/(BT0 - log(4700.0/R)); 

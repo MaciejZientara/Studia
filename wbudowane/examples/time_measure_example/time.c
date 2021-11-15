@@ -1,4 +1,5 @@
 #include <avr/io.h>
+#include <util/delay.h>
 #include <stdio.h>
 #include <inttypes.h>
 
@@ -10,6 +11,8 @@ void uart_init()
 {
   // ustaw baudrate
   UBRR0 = UBRR_VALUE;
+  // wyczyść rejestr UCSR0A
+  UCSR0A = 0;
   // włącz odbiornik i nadajnik
   UCSR0B = _BV(RXEN0) | _BV(TXEN0);
   // ustaw format 8n1
@@ -33,17 +36,13 @@ int uart_receive(FILE *stream)
   return UDR0;
 }
 
-// inicjalizacja ADC
-void adc_init()
+void timer1_init()
 {
-  ADMUX   = _BV(REFS0); // referencja AVcc, wejście ADC0
-  ADMUX  |= 0xe;        // MUX[3:0], input 1.1V (VBG)
-//   DIDR0   = _BV(ADC0D); // wyłącz wejście cyfrowe na ADC0
-  // częstotliwość zegara ADC 125 kHz (16 MHz / 128)
-  ADCSRA  = _BV(ADPS0) | _BV(ADPS1) | _BV(ADPS2); // preskaler 128
-  ADCSRA |= _BV(ADEN); // włącz ADC
+  // ustaw tryb licznika
+  // WGM1  = 0000 -- normal
+  // CS1   = 001  -- prescaler 1
+  TCCR1B = _BV(CS10);
 }
-
 FILE uart_file;
 
 int main()
@@ -53,23 +52,15 @@ int main()
   // skonfiguruj strumienie wejścia/wyjścia
   fdev_setup_stream(&uart_file, uart_transmit, uart_receive, _FDEV_SETUP_RW);
   stdin = stdout = stderr = &uart_file;
-  // zainicjalizuj ADC
-  adc_init();
-  // mierz napięcie
-  DDRB |= _BV(PB5);
+  // zainicjalizuj licznik
+  timer1_init();
+  // program testowy
   while(1) {
-    // PORTB ^= _BV(PB5); // nie wpływa na pomiary!
-
-    ADCSRA |= _BV(ADSC); // wykonaj konwersję
-    while (!(ADCSRA & _BV(ADIF))); // czekaj na wynik
-    
-    // while (!(ADCSRA & _BV(ADIF))) //MA wpływ na pomiary!
-    //   PORTB ^= _BV(PB5);
-    
-    ADCSRA |= _BV(ADIF); // wyczyść bit ADIF (pisząc 1!)
-    uint16_t v = ADC; // weź zmierzoną wartość (0..1023)
-    
-    printf("Odczytano: %hd %.3f\r\n",v, 1.1*1024.0 / v);    // 1.1V / 5V = v / 1023
+    uint16_t a = TCNT1; // wartość licznika przed czekaniem
+    _delay_us(10);
+    uint16_t b = TCNT1; // wartość licznika po czekaniu
+    printf("Zmierzony czas: %"PRIu16" cykli\r\n", b - a);
+    _delay_ms(1000);
   }
 }
 

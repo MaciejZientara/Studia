@@ -5,6 +5,7 @@
         "optional": "cpp",
         "ratio": "cpp",
         "iostream": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "type_traits": "cpp"
     }
 }
