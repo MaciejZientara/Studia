@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <util/delay.h>
 
-#define N 4
-#define WAIT 15
+#define N 6
+#define WAIT 2
 
 void timer1_init(){
   // ustaw tryb licznika
@@ -23,7 +23,7 @@ void timer1_init(){
 }
 
 void colorControl(int8_t color, int8_t delay){//        TO FINISH
-  _delay_ms(200);
+  _delay_ms(75);
 }
 
 void helper(int8_t color, int8_t i){
