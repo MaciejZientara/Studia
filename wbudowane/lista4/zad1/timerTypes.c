@@ -47,6 +47,7 @@ FILE uart_file;
 
 //int8 t, int16 t, int32 t, int64 t, float
 void int8(){
+    TCNT1 = 0;
     printf("int8\r\n");
     volatile int8_t a, b, c;
     // scanf("%"SCNd8"%"SCNd8, &a, &b);
@@ -66,6 +67,7 @@ void int8(){
     a = c; // to fix warning: variable ‘c’ set but not used [-Wunused-but-set-variable]
 }
 void int16(){
+    TCNT1 = 0;
     printf("int16\r\n");
     volatile int16_t a, b, c;
     // scanf("%"SCNd16"%"SCNd16, &a, &b);
@@ -85,6 +87,7 @@ void int16(){
     a = c; // to fix warning: variable ‘c’ set but not used [-Wunused-but-set-variable]
 }
 void int32(){
+    TCNT1 = 0;
     printf("int32\r\n");
     volatile int32_t a, b, c;
     // scanf("%"SCNd32"%"SCNd32, &a, &b);
@@ -104,6 +107,7 @@ void int32(){
     a = c; // to fix warning: variable ‘c’ set but not used [-Wunused-but-set-variable]
 }
 void int64(){
+    TCNT1 = 0;
     printf("int64\r\n");
     volatile int64_t a, b, c;
     // scanf("%lld %lld", &a, &b);
@@ -123,6 +127,7 @@ void int64(){
     a = c; // to fix warning: variable ‘c’ set but not used [-Wunused-but-set-variable]
 }
 void flo(){
+    TCNT1 = 0;
     printf("flo\r\n");
     volatile float a, b, c;
     // scanf("%f %f", &a, &b);

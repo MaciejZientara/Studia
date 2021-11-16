@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <algorithm>
+#include <utility>
 
 using namespace std;
 
@@ -134,8 +135,10 @@ class MinMax{
             mx = it;
         it = next(it);
     }
-    void result(){//                                                TODO, powinienem zwrocic pare iteratorow
-        cout << "min = " << *mn << " max = " << *mx << "\n";
+    void result(){//auto
+        auto pr = make_pair(mn,mx);
+        cout << "min = " << *pr.first << " max = " << *pr.second << "\n";
+        // return pr;
     }
 }; 
 
@@ -146,11 +149,11 @@ void partD(){
     f1.result();
     cout << "\n";
     cout << "set<int>\n";
-    auto f2 = for_each(s.begin(), s.end(),MinMax<double,typeof(s.begin())>(s.begin(),s.begin(),s.begin(),s.end()));
+    auto f2 = for_each(s.begin(), s.end(),MinMax<int,typeof(s.begin())>(s.begin(),s.begin(),s.begin(),s.end()));
     f2.result();
     cout << "\n";
     cout << "list<string>\n";
-    auto f3 = for_each(l.begin(), l.end(),MinMax<double,typeof(l.begin())>(l.begin(),l.begin(),l.begin(),l.end()));
+    auto f3 = for_each(l.begin(), l.end(),MinMax<string,typeof(l.begin())>(l.begin(),l.begin(),l.begin(),l.end()));
     f3.result();
     cout << "\n";
 }
