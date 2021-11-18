@@ -1,5 +1,6 @@
 #include <avr/io.h>
 #include<avr/interrupt.h>
+#include<util/delay.h>
 
 #define LED PB5
 #define LED_DDR DDRB
@@ -50,11 +51,13 @@ void timer0_init(){
 }
 
 ISR (TIMER0_COMPA_vect){    // Timer0 ISR
-  if(isIRenable)
-    disableIRLED();
-  else
-    enableIRLED();
-  isIRenable = !isIRenable;
+  TCCR1A ^= _BV(COM1A0);
+  PORTB &= ~_BV(PB1);
+  // if(isIRenable)
+  //   disableIRLED();
+  // else
+  //   enableIRLED();
+  // isIRenable = !isIRenable;
 }
 
 int main()
@@ -68,6 +71,7 @@ int main()
   timer0_init();
   
   while(1){
+    _delay_ms(10);
     if(!(BTN_PIN & _BV(BTN)))
       LED_PORT |= _BV(LED);
     else

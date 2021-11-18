@@ -21,7 +21,7 @@ int h(int y){
 }
 
 int main(){
-    cout << compose_f_gx_hy<int,int>(f,g,h)(5,10) << "\n";
+    cout << compose_f_gx_hy<int,int>(f,g,h)(4,10) << "\n";
     cout << compose_f_gx_hy<int,int>(
                             [](int x, int y){return (x%y)==0;},
                             [](int x){return x*x;},
