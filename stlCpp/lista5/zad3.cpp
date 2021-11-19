@@ -1,7 +1,8 @@
 #include <iostream>
 #include <vector>
-#include <list>
+#include <deque>
 #include <algorithm>
+#include <type_traits>
 
 using namespace std;
 
@@ -12,7 +13,9 @@ class autoVec{
     public:
     T& operator[] (int i){
         while(vec.size()<=i){
-            T tmp = 0;
+            T tmp;
+            if constexpr(is_convertible<T,int>::value)
+                tmp = 0;
             vec.push_back(tmp);
         }
         return vec[i];
@@ -30,7 +33,7 @@ class autoVec{
 
 class graph{
     private:
-    autoVec<bool> vertices;//moze byc wierzchołek bez krawędzi
+    autoVec<int> vertices;//moze byc wierzchołek bez krawędzi, int zamiast bool - vector<bool> dziala specyficznie
     autoVec<autoVec<int>> edges;
     public:
     void addVert(int a){
@@ -38,6 +41,12 @@ class graph{
     }
     void rmVert(int a){
         vertices[a] = false;//false - wierzchołek nie istnieje
+        int len = edges.size();
+        for(int i=0; i<len; i++)
+            edges[i][a] = 0;
+        len = edges[a].size();
+        for(int i=0; i<len; i++)
+            edges[a][i] = 0;
     }
     void addEdge(int a, int b, int weight){
         vertices[a] = true;
@@ -52,32 +61,32 @@ class graph{
             return;
         edges[a][b] = weight;
     }
-    bool BFS(int start, int end){                                                           //TO FINISH, if vertices == false, don't consider this vertex!!!!
+    bool BFS(int start, int end){
         int N = vertices.size();
 
         bool visited[N];
         for(int i=0; i<N; i++)
-            visited[i] = false;
+            visited[i] = !vertices[i];// if vertices == false, don't consider this vertex
 
-        list<int> ls;                                            //#include <list>, int zamiast T...
+        deque<int> que;
 
-        visited[start] = true;                                              //start nie musi byc intem... moze jednak T -> int
-        ls.push_back(start);
+        visited[start] = true;
+        que.push_back(start);
 
-        while(!ls.empty())
+        while(!que.empty())
         {
-            start = ls.front();
-            ls.pop_front();
+            start = que.front();
+            que.pop_front();
             if(start == end)
                 return true;//znaleziono scieżkę
 
-            for_each(edges[start].begin(),edges[start].end(),
-            [&](int elem){
-                if(!visited[elem]){
-                    visited[elem] = true;
-                    ls.push_back(elem);
+            int len = edges[start].size();
+            for(int i=0; i<len; i++){
+                if(edges[start][i]>0 && !visited[i]){//jest krawedz i nieodwiedzony wierzcholek
+                    visited[i] = true;
+                    que.push_back(i);
                 }
-            });
+            }
         }
         return false;//nie znaleziono ścieżki
     }
@@ -86,8 +95,36 @@ class graph{
             return false;
         return BFS(a,b);
     }
+    void debug(){
+        int len = vertices.size();
+        for(int i=0; i<len; i++)
+            cout << "(" << i << ", " << vertices[i] << ") ";
+        cout << "\n";
+
+        len = edges.size();
+        for(int i=0; i<len; i++){
+            for(auto e : edges[i])
+                cout << e << " ";
+            cout << "\n";
+        }
+    }
 };
 
 int main(){
-
+    graph g;
+    g.addEdge(1,2,1);
+    g.addEdge(2,1,1);
+    g.addEdge(1,3,1);
+    g.addEdge(3,1,1);
+    g.addEdge(2,3,1);
+    g.addEdge(3,2,1);
+    // g.debug();
+    cout << (g.isPath(1,2) ? "Y" : "N") << "\n";
+    g.rmVert(1);
+    // g.debug();
+    g.addEdge(1,4,1);
+    g.addEdge(4,1,1);
+    // g.debug();
+    cout << (g.isPath(1,2) ? "Y" : "N") << "\n";
+    
 }
