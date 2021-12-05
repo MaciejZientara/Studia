@@ -21,16 +21,6 @@ void setLED(int8_t state){
     LED_PORT &= ~_BV(LED);
 }
 
-int8_t isButtonPressed(uint8_t pin, uint8_t btn){
-  static const int8_t waitTime = 10, tests = 100;
-  int8_t count = 0;
-  while(!(pin & btn) && tests > count){
-    _delay_us(waitTime);
-    count++;
-  }
-  return count==tests;
-}
-
 int8_t getState(uint64_t *tab, uint16_t place){
   return (tab[place>>6] & (uint64_t)(1ULL<<(place&63)))>=1;
 }

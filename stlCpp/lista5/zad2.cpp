@@ -54,23 +54,23 @@ int main(int argc, char**argv){
         string s = argv[i];
 
         // liczba podzielna przez 3
-        auto f = for_each(s.begin(), s.end(),FSM<FUN>(9,
-                                                    MP(FUN)(0,[](char c){int tmp = (c-'0')%3; if(tmp==0) return 0; else return 0;}),
-                                                    MP(FUN)(0,[](char c){int tmp = (c-'0')%3; if(tmp==1) return 1; else return 0;}),
-                                                    MP(FUN)(0,[](char c){int tmp = (c-'0')%3; if(tmp==2) return 2; else return 0;}),
-                                                    MP(FUN)(1,[](char c){int tmp = (c-'0')%3; if(tmp==0) return 1; else return 1;}),
-                                                    MP(FUN)(1,[](char c){int tmp = (c-'0')%3; if(tmp==1) return 2; else return 1;}),
-                                                    MP(FUN)(1,[](char c){int tmp = (c-'0')%3; if(tmp==2) return 0; else return 1;}),
-                                                    MP(FUN)(2,[](char c){int tmp = (c-'0')%3; if(tmp==0) return 2; else return 2;}),
-                                                    MP(FUN)(2,[](char c){int tmp = (c-'0')%3; if(tmp==1) return 0; else return 2;}),
-                                                    MP(FUN)(2,[](char c){int tmp = (c-'0')%3; if(tmp==2) return 1; else return 2;})
-                                                    ));
+        // auto f = for_each(s.begin(), s.end(),FSM<FUN>(9,
+        //                                             MP(FUN)(0,[](char c){int tmp = (c-'0')%3; if(tmp==0) return 0; else return 0;}),
+        //                                             MP(FUN)(0,[](char c){int tmp = (c-'0')%3; if(tmp==1) return 1; else return 0;}),
+        //                                             MP(FUN)(0,[](char c){int tmp = (c-'0')%3; if(tmp==2) return 2; else return 0;}),
+        //                                             MP(FUN)(1,[](char c){int tmp = (c-'0')%3; if(tmp==0) return 1; else return 1;}),
+        //                                             MP(FUN)(1,[](char c){int tmp = (c-'0')%3; if(tmp==1) return 2; else return 1;}),
+        //                                             MP(FUN)(1,[](char c){int tmp = (c-'0')%3; if(tmp==2) return 0; else return 1;}),
+        //                                             MP(FUN)(2,[](char c){int tmp = (c-'0')%3; if(tmp==0) return 2; else return 2;}),
+        //                                             MP(FUN)(2,[](char c){int tmp = (c-'0')%3; if(tmp==1) return 0; else return 2;}),
+        //                                             MP(FUN)(2,[](char c){int tmp = (c-'0')%3; if(tmp==2) return 1; else return 2;})
+        //                                             ));
 
         // liczba binarna
-        // auto f = for_each(s.begin(), s.end(),FSM<FUN>(2,
-        //                                             MP(FUN)(0,[](char c){int tmp = c-'0'; return tmp;}),
-        //                                             MP(FUN)(1,[](char c){int tmp = c-'0'; return !tmp;})
-        //                                             ));
+        auto f = for_each(s.begin(), s.end(),FSM<FUN>(2,
+                                                    MP(FUN)(0,[](char c){int tmp = c-'0'; return tmp;}),
+                                                    MP(FUN)(1,[](char c){int tmp = c-'0'; return !tmp;})
+                                                    ));
 
         f.getState();
     }

@@ -1,17 +1,18 @@
 #include <avr/io.h>
 #include <stdio.h>
 #include <inttypes.h>
-#include <avr/interrupt.h>
-#include <util/delay.h>
-#include <avr/sleep.h>
+#include "i2c.h"
 
 #define BAUD 9600                          // baudrate
 #define UBRR_VALUE ((F_CPU)/16/(BAUD)-1)   // zgodnie ze wzorem
 
 // inicjalizacja UART
-void uart_init(){
+void uart_init()
+{
   // ustaw baudrate
   UBRR0 = UBRR_VALUE;
+  // wyczyść rejestr UCSR0A
+  UCSR0A = 0;
   // włącz odbiornik i nadajnik
   UCSR0B = _BV(RXEN0) | _BV(TXEN0);
   // ustaw format 8n1
@@ -35,48 +36,45 @@ int uart_receive(FILE *stream)
   return UDR0;
 }
 
-
 FILE uart_file;
 
-void timer1_init(){
-  TCCR1B |= _BV(ICES1); // Input Capture Edge Select to rising edge
-  TIMSK1 |= _BV(ICIE1); // Input Capture Interrupt Enable
-
-  // ustaw tryb licznika
-  // WGM1  = 0100 -- CTC top=OCR1A
-  // CS1   = 100  -- prescalar 256
-  // wzór: datasheet 20.12.3 str. 164
-  // częstotliwość 16e6/256*(1+62499) = 1 Hz
-  // OCR1A  = 62499
-  OCR1A = 62499;
-  TCCR1B |= _BV(WGM12) | _BV(CS12);
-  TIMSK1 |= _BV(OCIE1A); //Timer/Counter1, Output Compare A Match Interrupt Enable
-}
-
-volatile uint16_t Hz = 0;
-
-ISR (TIMER1_COMPA_vect){
-  printf("Odczytano: %hd Hz\r\n",Hz);
-  Hz = 0;
-}
-
-ISR(TIMER1_CAPT_vect){
-  Hz++;
-}
+const uint8_t eeprom_addr = 0xa0;
 
 int main()
 {
-  sei();
   // zainicjalizuj UART
   uart_init();
   // skonfiguruj strumienie wejścia/wyjścia
   fdev_setup_stream(&uart_file, uart_transmit, uart_receive, _FDEV_SETUP_RW);
   stdin = stdout = stderr = &uart_file;
-
-  timer1_init();
-
-  set_sleep_mode(SLEEP_MODE_IDLE);
+  // zainicjalizuj I2C
+  i2cInit();
+  // program testowy
+  uint16_t addr = 0;
+  #define i2cCheck(code, msg) \
+    if ((TWSR & 0xf8) != (code)) { \
+      printf(msg " failed, status: %.2x\r\n", TWSR & 0xf8); \
+      i2cReset(); \
+      continue; \
+    }
   while(1) {
-    sleep_mode();
+    i2cStart();
+    i2cCheck(0x08, "I2C start")
+    i2cSend(eeprom_addr | ((addr & 0x100) >> 7));
+    i2cCheck(0x18, "I2C EEPROM write request")
+    i2cSend(addr & 0xff);
+    i2cCheck(0x28, "I2C EEPROM set address")
+    i2cStart();
+    i2cCheck(0x10, "I2C second start")
+    i2cSend(eeprom_addr | 0x1 | ((addr & 0x100) >> 7));
+    i2cCheck(0x40, "I2C EEPROM read request")
+    uint8_t data = i2cReadNoAck();
+    i2cCheck(0x58, "I2C EEPROM read")
+    i2cStop();
+    i2cCheck(0xf8, "I2C stop")
+    printf("%.3x: %x\r\n", addr, data);
+    addr++;
+    addr &= 0x1ff;
   }
 }
+

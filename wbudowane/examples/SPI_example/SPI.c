@@ -1,17 +1,17 @@
 #include <avr/io.h>
 #include <stdio.h>
 #include <inttypes.h>
-#include <avr/interrupt.h>
-#include <util/delay.h>
-#include <avr/sleep.h>
 
 #define BAUD 9600                          // baudrate
 #define UBRR_VALUE ((F_CPU)/16/(BAUD)-1)   // zgodnie ze wzorem
 
 // inicjalizacja UART
-void uart_init(){
+void uart_init()
+{
   // ustaw baudrate
   UBRR0 = UBRR_VALUE;
+  // wyczyść rejestr UCSR0A
+  UCSR0A = 0;
   // włącz odbiornik i nadajnik
   UCSR0B = _BV(RXEN0) | _BV(TXEN0);
   // ustaw format 8n1
@@ -35,48 +35,45 @@ int uart_receive(FILE *stream)
   return UDR0;
 }
 
-
 FILE uart_file;
 
-void timer1_init(){
-  TCCR1B |= _BV(ICES1); // Input Capture Edge Select to rising edge
-  TIMSK1 |= _BV(ICIE1); // Input Capture Interrupt Enable
-
-  // ustaw tryb licznika
-  // WGM1  = 0100 -- CTC top=OCR1A
-  // CS1   = 100  -- prescalar 256
-  // wzór: datasheet 20.12.3 str. 164
-  // częstotliwość 16e6/256*(1+62499) = 1 Hz
-  // OCR1A  = 62499
-  OCR1A = 62499;
-  TCCR1B |= _BV(WGM12) | _BV(CS12);
-  TIMSK1 |= _BV(OCIE1A); //Timer/Counter1, Output Compare A Match Interrupt Enable
+// inicjalizacja SPI
+void spi_init()
+{
+    // ustaw piny MOSI, SCK i ~SS jako wyjścia
+    DDRB |= _BV(DDB3) | _BV(DDB5) | _BV(DDB2);
+    // włącz SPI w trybie master z zegarem 250 kHz
+    SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPR1);
 }
 
-volatile uint16_t Hz = 0;
-
-ISR (TIMER1_COMPA_vect){
-  printf("Odczytano: %hd Hz\r\n",Hz);
-  Hz = 0;
-}
-
-ISR(TIMER1_CAPT_vect){
-  Hz++;
+// transfer jednego bajtu
+uint8_t spi_transfer(uint8_t data)
+{
+    // rozpocznij transmisję
+    SPDR = data;
+    // czekaj na ukończenie transmisji
+    while (!(SPSR & _BV(SPIF)));
+    // wyczyść flagę przerwania
+    SPSR |= _BV(SPIF);
+    // zwróć otrzymane dane
+    return SPDR;
 }
 
 int main()
 {
-  sei();
   // zainicjalizuj UART
   uart_init();
   // skonfiguruj strumienie wejścia/wyjścia
   fdev_setup_stream(&uart_file, uart_transmit, uart_receive, _FDEV_SETUP_RW);
   stdin = stdout = stderr = &uart_file;
-
-  timer1_init();
-
-  set_sleep_mode(SLEEP_MODE_IDLE);
+  // zainicjalizuj SPI
+  spi_init();
+  // program testujący połączenie
+  uint8_t v = 0;
   while(1) {
-    sleep_mode();
+    uint8_t w = spi_transfer(v);
+    printf("Wysłano: %"PRId8" Odczytano: %"PRId8"\r\n", v, w);
+    v++;
   }
 }
+

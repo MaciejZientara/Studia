@@ -101,7 +101,7 @@ float variance(uint16_t tab[]){
     result += (tmp*tmp);
   }
   result/=N;
-  return sqrt(result);
+  return result;
 }
 
 int main()
