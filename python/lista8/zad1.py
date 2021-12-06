@@ -4,12 +4,18 @@ from sqlalchemy import Table, Column, Integer, ForeignKey, String, DateTime, cre
 from sqlalchemy.orm import sessionmaker, validates
 import sys
 
+#   ================================================
+#
+#   na dole kodu znajduja sie przykladowe polecenia do przetestowania programu
+#
+#   ================================================
+
 Base = declarative_base()
 
 engine = create_engine("sqlite:///zad1.db", echo=True)
 
 class Osoba(Base):
-    __tablename__ = 'Osoby'
+    __tablename__ = 'Osoba'
     id = Column(Integer, primary_key=True, autoincrement=True)
     imie = Column(String(20), nullable=False)
     nazwisko = Column(String(30), nullable=False)
@@ -21,17 +27,17 @@ class Osoba(Base):
         return value
 
 class Ksiazka(Base):
-    __tablename__ = 'Ksiazki'
+    __tablename__ = 'Ksiazka'
     id = Column(Integer, primary_key=True)
     nazwa = Column(String(30), nullable=False)
     autor = Column(String(50), nullable=False)
     rok = Column(Integer, nullable=False)
 
 class Wypozyczenie(Base):
-    __tablename__ = 'Wypozyczenia'
+    __tablename__ = 'Wypozyczenie'
     id = Column(Integer, primary_key=True)
-    id_ksiazka = Column(Integer,ForeignKey("Ksiazki.id"))
-    id_osoba = Column(Integer,ForeignKey("Osoby.id"))
+    id_ksiazka = Column(Integer,ForeignKey("Ksiazka.id"))
+    id_osoba = Column(Integer,ForeignKey("Osoba.id"))
     data_wypozyczenia = Column(DateTime(timezone=True), server_default=func.now())
     data_oddania = Column(DateTime(timezone=True), nullable=True)
 
@@ -135,10 +141,11 @@ def usun_wypozyczenie():
         print('Ksiazka.rok', end = ' ')
         return
     sesja = Session()
-    id_ksiazki = (sesja.query(Ksiazki).filter(Ksiazka.nazwa == sys.argv[6] and Ksiazka.autor == sys.argv[7] and Ksiazka.rok == int(sys.argv[8])).all())[0].id
-    id_osoby = (sesja.query(Osoby).filter(Osoba.imie == sys.argv[3] and Osoba.nazwisko == sys.argv[4] and Osoba.email == sys.argv[5]).all())[0].id
-    w = (sesja.query(Wypozyczenia).filter(Wypozyczenia.id_ksiazka == id_ksiazki and Wypozyczenia.id_osoba == id_ksiazki))[0]    
+    id_ksiazki = (sesja.query(Ksiazka).filter(Ksiazka.nazwa == sys.argv[6] and Ksiazka.autor == sys.argv[7] and Ksiazka.rok == int(sys.argv[8])).all())[0].id
+    id_osoby = (sesja.query(Osoba).filter(Osoba.imie == sys.argv[3] and Osoba.nazwisko == sys.argv[4] and Osoba.email == sys.argv[5]).all())[0].id
+    w = (sesja.query(Wypozyczenie).filter(Wypozyczenie.id_ksiazka == id_ksiazki and Wypozyczenie.id_osoba == id_ksiazki))[0]    
     sesja.delete(w)
+    sesja.commit()
     sesja.close()
 
 def wypozyczenie_ksiazki():
@@ -163,10 +170,13 @@ def wypozyczenie_ksiazki():
         print('Ksiazka.rok', end = ' ')
         return
     sesja = Session()
-    id_ksiazki = (sesja.query(Ksiazki).filter(Ksiazka.nazwa == sys.argv[6] and Ksiazka.autor == sys.argv[7] and Ksiazka.rok == int(sys.argv[8])).all())[0].id
-    id_osoby = (sesja.query(Osoby).filter(Osoba.imie == sys.argv[3] and Osoba.nazwisko == sys.argv[4] and Osoba.email == sys.argv[5]).all())[0].id
-    w = Wypozyczenie(id_ksiazka,id_osoby)
+    id_ksiazki = sesja.query(Ksiazka).filter(Ksiazka.nazwa.like(sys.argv[6]), Ksiazka.autor.like(sys.argv[7]), Ksiazka.rok.like(sys.argv[8])).all()
+    id_osoby = sesja.query(Osoba).filter(Osoba.imie.like(sys.argv[3]), Osoba.nazwisko.like(sys.argv[4]), Osoba.email.like(sys.argv[5])).all()
+    # id_ksiazki = sesja.query(Ksiazka).filter(Ksiazka.nazwa == sys.argv[6] and Ksiazka.autor == sys.argv[7] and Ksiazka.rok == int(sys.argv[8])).all()
+    # id_osoby = sesja.query(Osoba).filter(Osoba.imie == sys.argv[3] and Osoba.nazwisko == sys.argv[4] and Osoba.email == sys.argv[5]).all()
+    w = Wypozyczenie(id_ksiazka = id_ksiazki[0].id, id_osoba = id_osoby[0].id)
     sesja.add(w)
+    sesja.commit()
     sesja.close()
 
 def zwrot_ksiazki():
@@ -191,10 +201,11 @@ def zwrot_ksiazki():
         print('Ksiazka.rok', end = ' ')
         return
     sesja = Session()
-    id_ksiazki = (sesja.query(Ksiazki).filter(Ksiazka.nazwa == sys.argv[6] and Ksiazka.autor == sys.argv[7] and Ksiazka.rok == int(sys.argv[8])).all())[0].id
-    id_osoby = (sesja.query(Osoby).filter(Osoba.imie == sys.argv[3] and Osoba.nazwisko == sys.argv[4] and Osoba.email == sys.argv[5]).all())[0].id
-    w = (sesja.query(Wypozyczenia).filter(Wypozyczenia.id_ksiazka == id_ksiazki and Wypozyczenia.id_osoba == id_ksiazki))[0]    
+    id_ksiazki = (sesja.query(Ksiazka).filter(Ksiazka.nazwa == sys.argv[6] and Ksiazka.autor == sys.argv[7] and Ksiazka.rok == int(sys.argv[8])).all())[0].id
+    id_osoby = (sesja.query(Osoba).filter(Osoba.imie == sys.argv[3] and Osoba.nazwisko == sys.argv[4] and Osoba.email == sys.argv[5]).all())[0].id
+    w = (sesja.query(Wypozyczenie).filter(Wypozyczenie.id_ksiazka == id_ksiazki and Wypozyczenie.id_osoba == id_ksiazki))[-1]#dodaj do ostatniego pasujacego wypozyczenia
     w.data_oddania = func.now()
+    sesja.commit()
     sesja.close()
 
 def result_dict(r):
@@ -206,20 +217,16 @@ def result_dicts(rs):
 def printAll():
     sesja = Session()
     print('Osoby:')
-    stmt = select('*').select_from(Osoba)
-    result = sesja.execute(stmt).all()
-    print(result)
-    # print(result_dicts(result))
+    for u in sesja.query(Osoba).all():
+        print(u.__dict__)
     print('\n')
     print('Ksiazki:')
-    stmt = select('*').select_from(Ksiazka)
-    result = sesja.execute(stmt).fetchall()
-    print(result_dicts(result))
+    for u in sesja.query(Ksiazka).all():
+        print(u.__dict__)
     print('\n')
     print('Wypozyczenia:')
-    stmt = select('*').select_from(Wypozyczenie)
-    result = sesja.execute(stmt).fetchall()
-    print(result_dicts(result))
+    for u in sesja.query(Wypozyczenie).all():
+        print(u.__dict__)
     print('\n')
 
     sesja.close()
@@ -230,7 +237,6 @@ if len(sys.argv) == 1:
 else:
     if sys.argv[1] == 'wypisz':
         printAll()
-    # print("Argument List:", sys.argv)
     if sys.argv[1] == 'dodaj':
         if sys.argv[2] == 'ksiazka':
             dodaj_ksiazke()
@@ -247,3 +253,11 @@ else:
             usun_osobe()
         if sys.argv[2] == 'wypozyczenie':
             usun_wypozyczenie()
+
+
+# python3 zad1.py dodaj ksiazka hp jkr 2000
+# python3 zad1.py dodaj osoba Jan Kowalski JK@gmail.com
+# python3 zad1.py dodaj wypozyczenie Jan Kowalski JK@gmail.com hp jkr 2000
+# python3 zad1.py wypisz
+# python3 zad1.py dodaj zwrot Jan Kowalski JK@gmail.com hp jkr 2000
+# python3 zad1.py wypisz
