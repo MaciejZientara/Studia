@@ -65,7 +65,7 @@ void spi_init()
     // włącz interrupt
     SPCR |= _BV(SPIE);
     //zmienia kolejnosc wysylanych bitow: zamiast 123 wysyla 321
-    // SPCR |= _BV(DORD);
+    SPCR |= _BV(DORD);
 
     SPCR |= _BV(CPOL) | _BV(CPHA);
 }
@@ -106,7 +106,6 @@ volatile uint8_t iter = 0, state = 1;//state 1 - SCK high, state 0 - SCK low
 volatile uint8_t dataSend, dataRead;
 
 ISR (TIMER0_COMPA_vect){
-    // printf("%hhd %hhd %hhd %hhd\r\n",dataSend,dataRead,iter,SPDR);
     //toggle state and SCK
     state = !state;
     PortSCK ^= _BV(SCK);
@@ -114,24 +113,20 @@ ISR (TIMER0_COMPA_vect){
     if(!state){//high -> low = change pin
         //Changing the nth bit to x, where x = 1 or x = 0:
         //number ^= (-x ^ number) & (1UL << n);
-        // PortMOSI ^= (-((iter&dataSend) >0) ^ PortMOSI) & _BV(MOSI);
-        if(iter & dataSend)
-            PortMOSI |= _BV(MOSI);
-        else
-            PortMOSI &= ~_BV(MOSI);
+        PortMOSI ^= (-((iter&dataSend) >0) ^ PortMOSI) & _BV(MOSI);
     }
-    else//low -> high = read pin
+    else{//low -> high = read pin
         dataRead |= ((PinMISO & _BV(MISO)) > 0);
-
-    iter = iter<<1;
-    if(iter==0){//overflow = transmited all bits
-        TIMSK0 &= ~_BV(OCIE0A); //Timer/Counter0, Output Compare A Match Interrupt Disable
-        PortSCK |= _BV(SCK);
-        PortCS |= _BV(CS);
-        printf("receive %hhd, %hhd\r\n", SPDR, dataRead);
+        iter = iter<<1;
+        if(iter==0){//overflow = transmited all bits
+            TIMSK0 &= ~_BV(OCIE0A); //Timer/Counter0, Output Compare A Match Interrupt Disable
+            PortSCK |= _BV(SCK);
+            PortCS |= _BV(CS);
+            // printf("receive %hhd, %hhd\r\n", SPDR, dataRead);
+        }
+        else//not last bit to read, make room for next one
+            dataRead = dataRead << 1;
     }
-    else//not last bit to read, make room for next one
-        dataRead = dataRead << 1;
 }
 
 ISR(SPI_STC_vect){
@@ -188,6 +183,6 @@ int main(){
 
   set_sleep_mode(SLEEP_MODE_IDLE);
   while(1){
-    // sleep_mode();
+    sleep_mode();
   }
 }
