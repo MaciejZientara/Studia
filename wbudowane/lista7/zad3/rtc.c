@@ -139,6 +139,53 @@ void parseSetDate(char val[]){//DD-MM-YYYY
     setDate(day,month,year);
 }
 
+void initialParseSetDate(char val[]){//MMM DD YYYY
+    char s[] = "00-00-0000";//DD-MM-YYYY
+    //DD
+    if(val[4]!=' ')
+        s[0] = val[4];
+    s[1] = val[5];
+    //YYYY
+    s[6] = val[7];
+    s[7] = val[8];
+    s[8] = val[9];
+    s[9] = val[10];
+
+    val[3] = '\0';
+    if(strcmp(val,"Jan")==0)
+        s[4] = '1';
+    if(strcmp(val,"Feb")==0)
+        s[4] = '2';
+    if(strcmp(val,"Mar")==0)
+        s[4] = '3';
+    if(strcmp(val,"Apr")==0)
+        s[4] = '4';
+    if(strcmp(val,"May")==0)
+        s[4] = '5';
+    if(strcmp(val,"Jun")==0)
+        s[4] = '6';
+    if(strcmp(val,"Jul")==0)
+        s[4] = '7';
+    if(strcmp(val,"Aug")==0)
+        s[4] = '8';
+    if(strcmp(val,"Sep")==0)
+        s[4] = '9';
+    if(strcmp(val,"Oct")==0){
+        s[3] = '1';
+        s[4] = '2';
+    }
+    if(strcmp(val,"Nov")==0){
+        s[3] = '1';
+        s[4] = '2';
+    }
+    if(strcmp(val,"Dec")==0){
+        s[3] = '1';
+        s[4] = '2';
+    }
+    
+    parseSetDate(s);
+}
+
 int main()
 {
   uart_init();
@@ -150,8 +197,8 @@ int main()
 //   char* DATE = __DATE__;
 
 //   printf("%s %s\r\n",TIME,DATE);//19:57:47 Dec  5 2021
-  getTime();
   parseSetTime(__TIME__);
+  initialParseSetDate(__DATE__);
 
   while(1) {
     char command[10];
