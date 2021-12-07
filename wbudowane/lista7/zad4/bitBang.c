@@ -116,21 +116,21 @@ ISR (TIMER0_COMPA_vect){
         PortMOSI ^= (-((iter&dataSend) >0) ^ PortMOSI) & _BV(MOSI);
     }
     else{//low -> high = read pin
-        dataRead |= ((PinMISO & _BV(MISO)) > 0);
+        dataRead |= (((PinMISO & _BV(MISO)) > 0) << 7);
         iter = iter<<1;
         if(iter==0){//overflow = transmited all bits
             TIMSK0 &= ~_BV(OCIE0A); //Timer/Counter0, Output Compare A Match Interrupt Disable
             PortSCK |= _BV(SCK);
             PortCS |= _BV(CS);
-            // printf("receive %hhd, %hhd\r\n", SPDR, dataRead);
+            // printf("receive %x, %x\r\n", SPDR, dataRead);
         }
         else//not last bit to read, make room for next one
-            dataRead = dataRead << 1;
+            dataRead = dataRead >> 1;
     }
 }
 
 ISR(SPI_STC_vect){
-    printf("receive %hhd\r\n", SPDR);
+    printf("receive %hhd, previous %hhd\r\n", SPDR, dataRead);
     _delay_ms(2);
 }
 
@@ -153,6 +153,7 @@ ISR (TIMER1_COMPA_vect){
     // spi_init();// Note that the SPI logic will be reset once the SS pin is driven high
     printf("send %hhd\r\n", seconds);
     dataSend = seconds;
+    // SPDR = seconds-1;
     bitBang();
     seconds++;
 }
