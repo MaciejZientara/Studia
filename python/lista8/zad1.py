@@ -206,12 +206,6 @@ def zwrot_ksiazki():
     sesja.commit()
     sesja.close()
 
-def result_dict(r):
-    return dict(zip(r.keys(), r))
-
-def result_dicts(rs): 
-    return list(map(result_dict, rs))
-
 def printAll():
     sesja = Session()
     print('Osoby:')
