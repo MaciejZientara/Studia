@@ -1,0 +1,28 @@
+>>> python3 -m cProfile zad2lista1.py > Profile21.txt
+
+Profil funkcji is_palindrom:
+
+True
+False
+True
+True
+True
+         60 function calls in 0.000 seconds
+
+   Ordered by: standard name
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.000    0.000 zad2lista1.py:1(<module>)
+        1    0.000    0.000    0.000    0.000 zad2lista1.py:1(ArgumentNotStringError)
+        5    0.000    0.000    0.000    0.000 zad2lista1.py:3(is_palindrom)
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.__build_class__}
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.exec}
+        5    0.000    0.000    0.000    0.000 {built-in method builtins.print}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+        5    0.000    0.000    0.000    0.000 {method 'lower' of 'str' objects}
+       40    0.000    0.000    0.000    0.000 {method 'replace' of 'str' objects}
+
+
+Najwięcej wywołań funkcji 'replace' - możliwe, że przy odpowiednio dużych danych i wielu znakach do pominięcia
+ilość wywołań tej funkcji poważnie spowolniła by program.
+Być może można by napisać funkcję tak, aby po prostu pomijać zakazane znaki zamiast zamieniać je na puste funckją replace.
