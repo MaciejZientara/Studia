@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "inttypes.h": "c"
+        "inttypes.h": "c",
+        "queue.h": "c",
+        "task.h": "c",
+        "freertos.h": "c"
     }
 }
