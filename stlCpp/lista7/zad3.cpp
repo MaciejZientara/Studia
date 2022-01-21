@@ -15,7 +15,7 @@ int main(){
 
     ofstream myfile;
     while(!myfile.is_open())
-        myfile.open("zad3results.txt");
+        myfile.open("zad3results.csv");
 
     myfile << "uniform,binominal,normal\n";
     for(int i=0; i<N; i++){
