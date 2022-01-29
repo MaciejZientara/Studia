@@ -4,14 +4,12 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include <avr/sleep.h>
-#include <math.h>
 
 #define BAUD 9600                          // baudrate
 #define UBRR_VALUE ((F_CPU)/16/(BAUD)-1)   // zgodnie ze wzorem
 
 // inicjalizacja UART
-void uart_init()
-{
+void uart_init(){
   // ustaw baudrate
   UBRR0 = UBRR_VALUE;
   // włącz odbiornik i nadajnik
@@ -37,71 +35,66 @@ int uart_receive(FILE *stream)
   return UDR0;
 }
 
-// inicjalizacja ADC
-void adc_init()
-{
-  ADMUX   = _BV(REFS0) | _BV(MUX0); // referencja AVcc, wejście ADC1
-  DIDR0   = _BV(ADC1D); // wyłącz wejście cyfrowe na ADC1
-  // częstotliwość zegara ADC 125 kHz (16 MHz / 128)
-  ADCSRA  = _BV(ADPS0) | _BV(ADPS1) | _BV(ADPS2); // preskaler 128
-  ADCSRA |= _BV(ADEN) | _BV(ADIE); // włącz ADC + interrupt
-}
 
 FILE uart_file;
 
+void ac_init(){
+  ACSR |= /*_BV(ACIC) |*/ _BV(ACIS1) | _BV(ACIS0) | _BV(ACIE);
+  // ACIE: Analog Comparator Interrupt Enable
+  // ACIC: Analog Comparator Input Capture Enable
+  // ACIS1, ACIS0: Comparator Interrupt on Rising Output Edge.
+}
+
+
 void timer1_init(){
+  // TCCR1B |= _BV(ICES1); // Input Capture Edge Select to rising edge
+  // TIMSK1 |= _BV(ICIE1); // Input Capture Interrupt Enable
+
   // ustaw tryb licznika
   // WGM1  = 0100 -- CTC top=OCR1A
-  // CS1   = 001  -- prescalar 1
+  // CS1   = 100  -- prescalar 256
   // wzór: datasheet 20.12.3 str. 164
-  // częstotliwość 16e6/1*(1+1999) = 8000 Hz
-  // OCR1A  = 1999
-  OCR1A = 1999;
-  TCCR1B |= _BV(WGM12) | _BV(CS10);
+  // częstotliwość 16e6/256*(1+62499) = 1 Hz
+  // OCR1A  = 62499
+  OCR1A = 62499;
+  TCCR1B |= _BV(WGM12) | _BV(CS12);
   TIMSK1 |= _BV(OCIE1A); //Timer/Counter1, Output Compare A Match Interrupt Enable
 }
 
+volatile uint32_t Hz = 0;
+
 ISR (TIMER1_COMPA_vect){
-  ADCSRA |= _BV(ADSC); // wykonaj konwersję
+  printf("Odczytano: %lu Hz, okres: %f\r\n",Hz, 1.0/(double)Hz);
+  Hz = 0;
 }
 
-volatile float squareSum = 0.0;
-volatile uint32_t count = 0;
+// ISR(TIMER1_CAPT_vect){
+//   Hz++;
+// }
 
-float squareAverage(){
-  return sqrt(squareSum/count);
+ISR(ANALOG_COMP_vect){
+  Hz++;
 }
 
-ISR(ADC_vect){
-  //dBFS = 20*log(measure / MAXval)
-  // float tmp = 20.0 * log10f((float)ADC/1023.0);
-  float tmp = 5.0*(ADC - 512.0)/1023.0;//okolo 2.5V w ADC
-  squareSum += tmp*tmp;
-  count++;
-  // printf("Odczytano: %"PRIu16"\r\n", ADC);
-}
 
 int main()
 {
   sei();
-  timer1_init();
   // zainicjalizuj UART
   uart_init();
   // skonfiguruj strumienie wejścia/wyjścia
   fdev_setup_stream(&uart_file, uart_transmit, uart_receive, _FDEV_SETUP_RW);
   stdin = stdout = stderr = &uart_file;
-  // zainicjalizuj ADC
-  adc_init();
-  // mierz napięcie
 
+  timer1_init();
+
+  ac_init();
+
+  DDRD |= _BV(PD2);
   set_sleep_mode(SLEEP_MODE_IDLE);
   while(1) {
-    // sleep_mode();
-
-    printf("dB = %f\r\n", 20.0 * log10f(squareAverage()/512.0));
-    count = 0;
-    squareSum = 0.0;
-    _delay_ms(200);
+    sleep_mode();
+    // PORTD ^= _BV(PD2);//miganie dioda skierowana na fotorezystor
+    // _delay_us(2000);//zmieniac ta wartosc -> zmienia ilosc Hz na wyjsciu
   }
 }
-

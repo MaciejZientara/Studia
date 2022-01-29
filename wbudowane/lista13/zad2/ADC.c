@@ -1,10 +1,7 @@
 #include <avr/io.h>
 #include <stdio.h>
-#include <inttypes.h>
-#include <avr/interrupt.h>
 #include <util/delay.h>
-#include <avr/sleep.h>
-#include <math.h>
+#include <inttypes.h>
 
 #define BAUD 9600                          // baudrate
 #define UBRR_VALUE ((F_CPU)/16/(BAUD)-1)   // zgodnie ze wzorem
@@ -40,51 +37,33 @@ int uart_receive(FILE *stream)
 // inicjalizacja ADC
 void adc_init()
 {
-  ADMUX   = _BV(REFS0) | _BV(MUX0); // referencja AVcc, wejście ADC1
-  DIDR0   = _BV(ADC1D); // wyłącz wejście cyfrowe na ADC1
+  ADMUX   = _BV(REFS0); // referencja AVcc, wejście ADC0
+  DIDR0   = _BV(ADC0D); // wyłącz wejście cyfrowe na ADC0
   // częstotliwość zegara ADC 125 kHz (16 MHz / 128)
   ADCSRA  = _BV(ADPS0) | _BV(ADPS1) | _BV(ADPS2); // preskaler 128
-  ADCSRA |= _BV(ADEN) | _BV(ADIE); // włącz ADC + interrupt
+  ADCSRA |= _BV(ADEN); // włącz ADC
 }
 
 FILE uart_file;
 
-void timer1_init(){
-  // ustaw tryb licznika
-  // WGM1  = 0100 -- CTC top=OCR1A
-  // CS1   = 001  -- prescalar 1
-  // wzór: datasheet 20.12.3 str. 164
-  // częstotliwość 16e6/1*(1+1999) = 8000 Hz
-  // OCR1A  = 1999
-  OCR1A = 1999;
-  TCCR1B |= _BV(WGM12) | _BV(CS10);
-  TIMSK1 |= _BV(OCIE1A); //Timer/Counter1, Output Compare A Match Interrupt Enable
-}
-
-ISR (TIMER1_COMPA_vect){
+void func(){
+  uint16_t val1, val2;
+  ADMUX   = _BV(REFS0) | _BV(MUX0); // referencja AVcc, wejście ADC1  
   ADCSRA |= _BV(ADSC); // wykonaj konwersję
-}
-
-volatile float squareSum = 0.0;
-volatile uint32_t count = 0;
-
-float squareAverage(){
-  return sqrt(squareSum/count);
-}
-
-ISR(ADC_vect){
-  //dBFS = 20*log(measure / MAXval)
-  // float tmp = 20.0 * log10f((float)ADC/1023.0);
-  float tmp = 5.0*(ADC - 512.0)/1023.0;//okolo 2.5V w ADC
-  squareSum += tmp*tmp;
-  count++;
-  // printf("Odczytano: %"PRIu16"\r\n", ADC);
+  while (!(ADCSRA & _BV(ADIF))); // czekaj na wynik
+  ADCSRA |= _BV(ADIF); // wyczyść bit ADIF (pisząc 1!)
+  val1 = ADC; // weź zmierzoną wartość (0..1023)
+  ADMUX   = _BV(REFS0) | _BV(MUX1); // referencja AVcc, wejście ADC2
+  ADCSRA |= _BV(ADSC); // wykonaj konwersję
+  while (!(ADCSRA & _BV(ADIF))); // czekaj na wynik
+  ADCSRA |= _BV(ADIF); // wyczyść bit ADIF (pisząc 1!)
+  val2 = ADC; // weź zmierzoną wartość (0..1023)
+  
+  printf("Odczytano: ADC1 = %f, ADC2 = %f\r\n", 5.0*((double)val1/1023.0), 5.0*((double)val2/1023.0));
 }
 
 int main()
 {
-  sei();
-  timer1_init();
   // zainicjalizuj UART
   uart_init();
   // skonfiguruj strumienie wejścia/wyjścia
@@ -93,14 +72,8 @@ int main()
   // zainicjalizuj ADC
   adc_init();
   // mierz napięcie
-
-  set_sleep_mode(SLEEP_MODE_IDLE);
   while(1) {
-    // sleep_mode();
-
-    printf("dB = %f\r\n", 20.0 * log10f(squareAverage()/512.0));
-    count = 0;
-    squareSum = 0.0;
+    func();
     _delay_ms(200);
   }
 }
