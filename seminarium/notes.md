@@ -27,10 +27,23 @@ https://pl.wikipedia.org/wiki/Woksel
 ===============================================================================================================
 
 1. krótka historia, 'taka prosta gra - genialne algorytmy'
+    1. rotowanie bloków
+    2. nie wyświetlanie ścian kiedy bloki się stykają
+    3. dzielenie świata na fragmenty
+    4. obliczenia chunków
+    5. zmienny LOD (level of detail)
 2. ogólne informacje o grafice komputerowej
+    1. mnożenie macierzy i wektory (hitbox)
+    2. pipeline
+    3. shadery, w tym geometry shader
+    4. nakładanie tekstury, zamiast wyliczania kształtu na podstawie pkt (prykład z kulą ziemską)
+    5. z-buffer
 3. zarządzanie wyświetlaniem
+    1. wyświetlanie tylko chunk w zasięgu
+    2. tylko widoczne ściany
+    3. podział świata na fragmenty, używanie oct/quad Tree
 4. zarządzanie pamięcią
-
+    1. garbage collector jest wolny, lepiej ręcznie (java vs bedrock)
 
 ===============================================================================================================
 
@@ -74,7 +87,10 @@ najważniejsze są obrazki i animacja przy quadTree, wykorzystać tą animacje �
 miasto -> osiedle -> ulica -> dom -> pokój
 wyświetlamy TYLKO to co możemy zobaczyć
 
-im dalej obiekt od gracza tym mniejsza precyzja przy jego wyświetlaniu (np zamiast wielu kolorów bloku dirt, wystarczy duży brązowy kwadrat analogicznie z animacją z quadTree)
+* im dalej obiekt od gracza tym mniejsza precyzja przy jego wyświetlaniu (np zamiast wielu kolorów bloku dirt, wystarczy duży brązowy kwadrat analogicznie z animacją z quadTree)
+zmienny LOD (level of detail)
+przy mc można zrobić pikseloze jak w quadTree, ale normalnie używa się [mipmaps](https://en.wikipedia.org/wiki/Mipmap)
+[picture](https://vulkan-tutorial.com/images/mipmaps_example.jpg)
 
 * język ma wpływ na wydajność (zwłaszcza zarządzanie pamięcia, garbage colector jest wolny!): mc w Java, mc bedrock w C++ [link](https://www.reddit.com/r/Minecraft/comments/kfe8y8/java_performance_vs_bedrock_performance_in_a/)
 
