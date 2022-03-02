@@ -28,20 +28,18 @@ https://pl.wikipedia.org/wiki/Woksel
 
 1. krótka historia, 'taka prosta gra - genialne algorytmy'
     1. rotowanie bloków
-    2. nie wyświetlanie ścian kiedy bloki się stykają
-    3. dzielenie świata na fragmenty
-    4. obliczenia chunków
-    5. zmienny LOD (level of detail)
+    2. dzielenie świata (obliczenia chunków)
 2. ogólne informacje o grafice komputerowej
-    1. mnożenie macierzy i wektory (hitbox)
+    1. mnożenie macierzy i wektory (+ hitbox)
     2. pipeline
     3. shadery, w tym geometry shader
     4. nakładanie tekstury, zamiast wyliczania kształtu na podstawie pkt (prykład z kulą ziemską)
     5. z-buffer
 3. zarządzanie wyświetlaniem
-    1. wyświetlanie tylko chunk w zasięgu
-    2. tylko widoczne ściany
+    1. nie wyświetlanie ścian kiedy bloki się stykają
+    2. wyświetlanie tylko chunk w zasięgu
     3. podział świata na fragmenty, używanie oct/quad Tree
+    4. zmienny LOD (level of detail)
 4. zarządzanie pamięcią
     1. garbage collector jest wolny, lepiej ręcznie (java vs bedrock)
 
