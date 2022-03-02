@@ -32,7 +32,7 @@ https://pl.wikipedia.org/wiki/Woksel
 2. ogólne informacje o grafice komputerowej
     1. mnożenie macierzy i wektory (+ hitbox)
     2. pipeline
-    3. shadery, w tym geometry shader
+    3. shadery, w tym geometry shader (GPU szybsze od CPU, przekazywanie wielu punktów wolniejsze niż przekazanie jednego i klonowanie pkt na samej karcie graficznej)
     4. nakładanie tekstury, zamiast wyliczania kształtu na podstawie pkt (prykład z kulą ziemską)
     5. z-buffer
 3. zarządzanie wyświetlaniem
@@ -42,6 +42,8 @@ https://pl.wikipedia.org/wiki/Woksel
     4. zmienny LOD (level of detail)
 4. zarządzanie pamięcią
     1. garbage collector jest wolny, lepiej ręcznie (java vs bedrock)
+    2. lokalność cache przy ładowaniu chunk
+    3. wielowątkowość
 
 ===============================================================================================================
 
@@ -93,6 +95,7 @@ przy mc można zrobić pikseloze jak w quadTree, ale normalnie używa się [mipm
 * język ma wpływ na wydajność (zwłaszcza zarządzanie pamięcia, garbage colector jest wolny!): mc w Java, mc bedrock w C++ [link](https://www.reddit.com/r/Minecraft/comments/kfe8y8/java_performance_vs_bedrock_performance_in_a/)
 
 
+* wielowątkowość i lokalność cache (link linia 13)
 
 ===============================================================================================================
 
