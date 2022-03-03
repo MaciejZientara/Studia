@@ -1,7 +1,6 @@
+from copy import deepcopy
 
 moves = 0
-#kazda partie da sie w takiej sytuacji zakonczyc w mniej niz 50 ruchach, 
-#pomocne do unikniecia zapetlenia
 
 # plansza
 # 8
@@ -47,11 +46,9 @@ def isValidMove(wKing,wRook,bKing):
     return True
 
 def isCheck(wKing,wRook,bKing):#czarny krol szachowany przez wieze
-    # print('isCheck')
     return (bKing[0]==wRook[0]) or (bKing[1]==wRook[1])
 
 def isPat(wKing,wRook,bKing):#czarny krol nie moze wykonac zadnego ruchu
-    # print('isPat')
     return not (isValidMove(wKing,wRook,moveL(bKing)) or
                 isValidMove(wKing,wRook,moveR(bKing)) or
                 isValidMove(wKing,wRook,moveD(bKing)) or
@@ -62,48 +59,50 @@ def isPat(wKing,wRook,bKing):#czarny krol nie moze wykonac zadnego ruchu
                 isValidMove(wKing,wRook,moveDL(bKing)))
 
 def isWin(wKing,wRook,bKing):#krol szachowany i nie moze zrobic ruchu
-    # print('isWin')
-    # print(wKing,wRook,bKing,isCheck(wKing,wRook,bKing),isPat(wKing,wRook,bKing))
     return isCheck(wKing,wRook,bKing) and isPat(wKing,wRook,bKing)
 
 def setMoves(count):
     global moves
     moves = count
 
-def round(turn,wKing,wRook,bKing,count):
+def round(turn,wKing,wRook,bKing,count,path):
+    if not __debug__:
+        path = deepcopy(path) #aby w kazdym wywolaniu funkcji nie bylo referencji do tego samego obiektu, tylko nowa lista
+        path.append([wKing,wRook,bKing])
     if count > moves:
         return False #fail
     if isWin(wKing,wRook,bKing):
         setMoves(count)
+        if not __debug__:
+            # print(path)
+            out.write(str(path)+'\n')
         return True #poniewaz w ValidMove sprawdzam czy jest pod wieza - wyklucza szach
     if not isValidMove(wKing,wRook,bKing):
         return False #niepoprawny ruch
     if turn == 'white' and isCheck(wKing,wRook,bKing):
         return False #czarny dobrowolnie wszedl pod wieze
 
-    # print(turn,wKing,wRook,bKing,count)
-
     if turn == 'black' and isPat(wKing,wRook,bKing):
         return False
 
     if turn == 'black':
-        return (round('white',wKing,wRook,moveL(bKing) ,count+1) or
-                round('white',wKing,wRook,moveR(bKing) ,count+1) or
-                round('white',wKing,wRook,moveD(bKing) ,count+1) or
-                round('white',wKing,wRook,moveU(bKing) ,count+1) or
-                round('white',wKing,wRook,moveDR(bKing),count+1) or
-                round('white',wKing,wRook,moveDL(bKing),count+1) or
-                round('white',wKing,wRook,moveUR(bKing),count+1) or
-                round('white',wKing,wRook,moveUL(bKing),count+1))
+        return (round('white',wKing,wRook,moveL(bKing) ,count+1,path) or
+                round('white',wKing,wRook,moveR(bKing) ,count+1,path) or
+                round('white',wKing,wRook,moveD(bKing) ,count+1,path) or
+                round('white',wKing,wRook,moveU(bKing) ,count+1,path) or
+                round('white',wKing,wRook,moveDR(bKing),count+1,path) or
+                round('white',wKing,wRook,moveDL(bKing),count+1,path) or
+                round('white',wKing,wRook,moveUR(bKing),count+1,path) or
+                round('white',wKing,wRook,moveUL(bKing),count+1,path))
     else: #white
-        if (round('black',moveL(wKing) ,wRook,bKing,count+1) or
-            round('black',moveR(wKing) ,wRook,bKing,count+1) or
-            round('black',moveD(wKing) ,wRook,bKing,count+1) or
-            round('black',moveU(wKing) ,wRook,bKing,count+1) or
-            round('black',moveDR(wKing),wRook,bKing,count+1) or
-            round('black',moveDL(wKing),wRook,bKing,count+1) or
-            round('black',moveUR(wKing),wRook,bKing,count+1) or
-            round('black',moveUL(wKing),wRook,bKing,count+1)):
+        if (round('black',moveL(wKing) ,wRook,bKing,count+1,path) or
+            round('black',moveR(wKing) ,wRook,bKing,count+1,path) or
+            round('black',moveD(wKing) ,wRook,bKing,count+1,path) or
+            round('black',moveU(wKing) ,wRook,bKing,count+1,path) or
+            round('black',moveDR(wKing),wRook,bKing,count+1,path) or
+            round('black',moveDL(wKing),wRook,bKing,count+1,path) or
+            round('black',moveUR(wKing),wRook,bKing,count+1,path) or
+            round('black',moveUL(wKing),wRook,bKing,count+1,path)):
             return True
 
         tmp = wRook
@@ -111,43 +110,50 @@ def round(turn,wKing,wRook,bKing,count):
             tmp = moveL(tmp)
             if tmp == bKing or tmp == wKing:
                 break
-            if round('black',wKing,tmp,bKing,count+1):
+            if round('black',wKing,tmp,bKing,count+1,path):
                 return True
         tmp = wRook
         for i in range(8):
             tmp = moveD(tmp)
             if tmp == bKing or tmp == wKing:
                 break
-            if round('black',wKing,tmp,bKing,count+1):
+            if round('black',wKing,tmp,bKing,count+1,path):
                 return True
         tmp = wRook
         for i in range(8):
             tmp = moveR(tmp)
             if tmp == bKing or tmp == wKing:
                 break
-            if round('black',wKing,tmp,bKing,count+1):
+            if round('black',wKing,tmp,bKing,count+1,path):
                 return True
         tmp = wRook
         for i in range(8):
             tmp = moveU(tmp)
             if tmp == bKing or tmp == wKing:
                 break
-            if round('black',wKing,tmp,bKing,count+1):
+            if round('black',wKing,tmp,bKing,count+1,path):
                 return True
     return False
 
 
 with open('zad1_input.txt','r') as file:
-    for line in file:
-        [turn,wKing,wRook,bKing] = line.split()
-        print('start')
-        for i in range(50):
-            moves = i+1
-            # print('max moves = ' + str(moves))
-            # print(turn,wKing,wRook,bKing)
-            # print(isWin(wKing,wRook,bKing))
-            if round(turn,wKing,wRook,bKing,0):
-                print('udalo sie w',moves,'ruchach!')
-                break
+    with open('zad1_output.txt','a') as out:
+        for line in file:
+            [turn,wKing,wRook,bKing] = line.split()
+            found = False
+            for i in range(50):
+                moves = i+1
+                if round(turn,wKing,wRook,bKing,0,[]):
+                    found = True
+                    # print('udalo sie w',moves,'ruchach!')
+                    out.write('udalo sie w '+str(moves)+' ruchach!\n')
+                    break
+            if not found:
+                # print('INF')
+                out.write('INF\n')
 
 
+# zwykly tryb:
+# python3 zad1.py 
+# tryb debug:
+# python3 -O zad1.py 
