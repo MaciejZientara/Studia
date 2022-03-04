@@ -1,4 +1,5 @@
 import random
+import math
 
 # 1. royal flush
 # 2. straight flush
@@ -58,26 +59,77 @@ customDeck = [  '2♠','3♠','4♠','5♠','6♠','7♠','8♠','9♠','10♠',
 def calculateChance(hand):
     colorsCount = [0,0,0,0]
     numberCount = [0,0,0,0,0,0,0,0,0]
-    
+    colorSorted = [[],[],[],[]]
+
     for card in customDeck:
         for c in colors:
             if c in card:
                 colorsCount[colors.index(c)]+=1
+                colorSorted[colors.index(c)].append(int(card[0:-1]))
         for n in number:
             if n in card:
                 numberCount[number.index(n)]+=1
-    print('colorsCount =', colorsCount, 'numberCount =', numberCount)
+    
+    # print('color sorted cards:')
+    for c in colorSorted:
+        c.sort()
+        # print(c) 
+    # print('colorsCount =', colorsCount, 'numberCount =', numberCount)
+    
+
+    # a < b : math.comb(a,b) = 0
+    allPossibleHands = math.comb(len(customDeck),5)
     chances = [0,0,0,0,0,0,0,0,0,0]
-    chances[0] = 0 #royal flush
+    chances[0] = 0 # royal flush
+    
+    for c in colorSorted:
+        if len(c) >= 5:
+            for i in range(len(c)-5+1):
+                if all([c[i+j]==(c[i+j+1]-1) for j in range(4)]):
+                    chances[1]+=1 # straight flush
 
-    #                                                                               TODO  !!!
+    for n in numberCount:
+        if n >= 4:
+            chances[2] += math.comb(len(customDeck)-4,1) # four of a kind
 
-    chances[10] = 0 #high card
+    for n in range(len(numberCount)):
+        if numberCount[n] >= 3:
+            for i in range(len(numberCount)):
+                if i!=n and numberCount[i] >= 2:
+                    chances[3] += math.comb(numberCount[n],3) + math.comb(numberCount[i],2) # full house
 
-    return sum(chances[i] for i in range(whatSet(hand))) # suma szans lepszych ustawien niz przeciwnika
+    chances[4] = math.comb(colorsCount[0],5) + math.comb(colorsCount[1],5) + math.comb(colorsCount[2],5) + math.comb(colorsCount[3],5) # flush
+
+    for i in range(len(numberCount)-5+1): #math.prod - iloczyn wszystkich elementow listy
+        chances[5] += math.prod([numberCount[i+j] for j in range(5)]) # straight
+
+    for n in range(len(numberCount)):
+        if numberCount[n] >= 3:
+            chances[6] += math.comb(numberCount[n],3) * math.comb(sum([numberCount[i]>=1 and i!=n for i in range(len(numberCount))]),2) # three of a kind
+
+    # chances[7] = # two pair
+    for n in range(len(numberCount)):
+        if numberCount[n] >= 2:
+            for i in range(len(numberCount)):
+                if i!=n and numberCount[i] >=2:
+                    for j in range(len(numberCount)):
+                        if i!=j and j!=n and numberCount[j] >= 1:
+                            chances[7] += math.comb(numberCount[n],2) + math.comb(numberCount[i],2) + math.comb(numberCount[j],1) # two pair
+
+    for n in range(len(numberCount)):
+        if numberCount[n] >= 2:
+            chances[8] += math.comb(numberCount[n],2) * math.comb(sum([numberCount[i]>=1 and i!=n for i in range(len(numberCount))]),3) # one pair
+
+    chances[9] = 0 # high card
+
+    return min(1,(sum(chances[i] for i in range(whatSet(hand)))/allPossibleHands)) # suma szans lepszych ustawien niz przeciwnika / wszystkie combinacje
 
 
-hand = drawHandFigures()
-print(hand)
-print(whatSet(hand))
-print(calculateChance(hand))
+for i in range(10):
+    hand = drawHandFigures()
+    print(hand, '\t',format(calculateChance(hand)*100,'.2f'), '%')
+
+
+
+
+# czy straight, flush i straight flush nie maja tych samych ukladow w sobie????
