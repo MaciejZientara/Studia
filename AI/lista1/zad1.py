@@ -137,7 +137,7 @@ def round(turn,wKing,wRook,bKing,count,path):
 
 
 with open('zad1_input.txt','r') as file:
-    with open('zad1_output.txt','a') as out:
+    with open('zad1_output.txt','w') as out:
         for line in file:
             [turn,wKing,wRook,bKing] = line.split()
             found = False
@@ -146,12 +146,17 @@ with open('zad1_input.txt','r') as file:
                 if round(turn,wKing,wRook,bKing,0,[]):
                     found = True
                     # print('udalo sie w',moves,'ruchach!')
-                    out.write('udalo sie w '+str(moves)+' ruchach!\n')
+                    out.write(str(moves)+'\n')
                     break
             if not found:
                 # print('INF')
                 out.write('INF\n')
 
+# black f2 h6 h1
+# white f2 c6 h1
+# white f3 c6 h2
+# black c4 c8 h3
+# white a1 b2 c3
 
 # zwykly tryb:
 # python3 zad1.py 
