@@ -1,4 +1,6 @@
 from copy import deepcopy
+from collections import deque
+from math import sqrt
 
 # plansza
 # 8
@@ -33,28 +35,35 @@ def moveDR(figure):
 kingMoves = [moveL,moveD,moveR,moveU,moveUL,moveDL,moveDR,moveUR]
 rookMoves = [moveL,moveD,moveR,moveU]
 
-def isCheck(wKing,wRook,bKing):#czarny krol szachowany przez wieze
-    return (bKing[0]==wRook[0]) or (bKing[1]==wRook[1])
+def areFiguresTooClose(figure1,figure2):
+    return (abs(ord(figure1[0]) - ord(figure2[0])) <= 1) and (abs(ord(figure1[1]) - ord(figure2[1])) <= 1)
+
+def isCheck(wKing,wRook,bKing):#czarny krol szachowany przez wieze i nie moze zbic tej wiezy!
+    return ((bKing[0]==wRook[0]) or (bKing[1]==wRook[1]))# and not areFiguresTooClose(wRook,bKing)
 
 def isOutsideBoard(figure):
     return figure[0] < 'a' or figure[0] > 'h' or figure[1] < '1' or figure[1] > '8'
 
-def areKingsTooClose(king1,king2):
-    return (abs(ord(king1[0]) - ord(king2[0])) <= 1) and (abs(ord(king1[1]) - ord(king2[1])) <= 1)
-
 def isPat(wKing,wRook,bKing):#czarny krol nie moze wykonac zadnego ruchu
     for move in kingMoves:
         tmpKing = move(bKing)
-        if not (isOutsideBoard(tmpKing) or isCheck(wKing,wRook,tmpKing) or areKingsTooClose(wKing,tmpKing)):
+        if not (isOutsideBoard(tmpKing) or isCheck(wKing,wRook,tmpKing) or areFiguresTooClose(wKing,tmpKing)):
             return False
     return True
     #pat kiedy wszystkie ruchy sa niepoprawne, jesli ruch poprawny to return false
-    
+
+def isWrongDirection(bKing,old,new):#nie oplaca sie oddalac od czarnego krola!
+    dist = lambda a,b : sqrt((ord(a[0])-ord(b[0]))**2 + (ord(a[1])-ord(b[1]))**2)
+    return dist(bKing,old) + 1 < dist(bKing,new)
+    #odleglosc zwiekszyla sie o wiecej niz 1
+
 def isValidMove(turn,wKing,wRook,bKing):
     if wKing == bKing or wRook == bKing or wRook == wKing:
         return False #wejscie na inna figure
-    if areKingsTooClose(wKing,bKing):
+    if areFiguresTooClose(wKing,bKing):
         return False #wejscie krola w zakres krola
+    if areFiguresTooClose(wRook,bKing):
+        return False #zbicie wiezy = fail
     if turn == 'white' and isCheck(wKing,wRook,bKing):#czarny zrobil ruch, tura bialego
         return False #czarny dobrowolnie wszedl pod wieze
     if turn == 'black' and isPat(wKing,wRook,bKing) and not isCheck(wKing,wRook,bKing):
@@ -69,19 +78,19 @@ def queueInsert(que,turn,wKing,wRook,bKing,count,path):
         return #nie udalo sie znalezc rozwiazania, czyszczenie listy
 
     if isValidMove(turn,wKing,wRook,bKing):
-        que.append([turn,wKing,wRook,bKing,count,path])
         if isWin(wKing,wRook,bKing):
-            que[0],que[-1] = que[-1],que[0] #znalezione zwyciestwo, w nastepnym while w round wyjscie z petli
-            # print('win',que[0], isWin(que[0][1],que[0][2],que[0][3]))
+            que.appendleft([turn,wKing,wRook,bKing,count,path])#znalezione zwyciestwo, w nastepnym while w round wyjscie z petli
+        else:
+            que.append([turn,wKing,wRook,bKing,count,path])
     return
 
 def round(Turn,whiteKing,whiteRook,blackKing):
-    que = []
+    que = deque()
 
     que.append([Turn,whiteKing,whiteRook,blackKing,0,[]])
 
     while que: # que not empty
-        [turn,wKing,wRook,bKing,count,path] = que.pop(0)
+        [turn,wKing,wRook,bKing,count,path] = que.popleft()
 
         # print(turn,wKing,wRook,bKing,count)
 
@@ -103,12 +112,16 @@ def round(Turn,whiteKing,whiteRook,blackKing):
         else: #white
             for move in kingMoves:
                 WKing = move(wKing)
+                if isWrongDirection(bKing,wKing,WKing):
+                    continue
                 if not isOutsideBoard(WKing):
                     queueInsert(que,'black',WKing,wRook,bKing,count+1,path)
             for mv in rookMoves:
                 tmp = wRook
                 for i in range(8):
                     tmp = mv(tmp)
+                    if isWrongDirection(bKing,wRook,tmp):
+                        break
                     if tmp == bKing or tmp == wKing or isOutsideBoard(tmp): #wieza natrafila na przeszkode, nie moze dalej isc
                         break
                     queueInsert(que,'black',wKing,tmp,bKing,count+1,path)
