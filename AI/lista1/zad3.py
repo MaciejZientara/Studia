@@ -1,3 +1,11 @@
+# zaczynam od wylosowania reki figuranta, nastepnie
+# sprawdzam jaki uklad mu się wylosował (np full house)
+# na podstawie przygotowanej tali dla blotkarza wyliczam
+# jego szanse na zwyciestwo, ktora jest rowna sumie szans
+# wylosowania ukladu lepszego niz figurant
+# np dla full house figuranta, pokonac go moze tylko 
+# straight flush lub four of a kind blotkarza
+
 import random
 import math
 

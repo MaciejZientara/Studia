@@ -1,3 +1,9 @@
+# metoda BFS dodaje kolejne kroki do kolejki
+# o ile ten ruch jest poprawny:
+# nie wychodzi poza plansze, 
+# nie lamiemy zasad gry (wejscie na inny pionek, itp)
+# dodatkowo ograniczylem ruchy, w ktorych figura oddala sie od czarnego krola 
+
 from copy import deepcopy
 from collections import deque
 from math import sqrt

@@ -1,3 +1,8 @@
+# dla ciagu 0/1 dlugosci n i wczytanej wartosci m
+# w czasie O(n*m) sprawdzam wszystkie kombinacje
+# jesli jest 1 to zmniejszam sume pozostalych 1,
+# jesli jest 0 to zwiekszam ilosc zmian
+# wynik to ilosc zmian + ilosc pozostalych 1
 
 def nonogram(row, n):
     oneCount = sum([r=='1' for r in row])
