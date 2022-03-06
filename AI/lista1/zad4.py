@@ -14,10 +14,11 @@ def nonogram(row, n):
         res = min(res,changes)
     return res
 
-# with open('zad4_output.txt','a') as out:
-with open('zad4_input.txt','r') as file:
-    for line in file:
-        [row,n] = line.split()
-        n = int(n)
-        # out.write(nonogram(row,n))
-        print(nonogram(row,n))
+with open('zad4_output.txt','w') as out:
+    with open('zad4_input.txt','r') as file:
+        for line in file:
+            [row,n] = line.split()
+            n = int(n)
+            out.write(str(nonogram(row,n))+'\n')
+            # print(nonogram(row,n))
+
