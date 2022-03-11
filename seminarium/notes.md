@@ -24,22 +24,31 @@ marching cubes algorithm
 https://pl.wikipedia.org/wiki/Algorytm_maszeruj%C4%85cych_sze%C5%9Bcian%C3%B3w
 https://pl.wikipedia.org/wiki/Woksel
 
+Historia:
+
+https://www.wired.com/2013/11/minecraft-book/
+
+https://interactive-stag.wired.com/www-wired-com__2013__11__minecraft-book/Infiniminer-660x495.png
+
+clone infiminer
+
+
 ===============================================================================================================
 
-1. krótka historia, 'taka prosta gra - genialne algorytmy'
-    1. rotowanie bloków
-    2. dzielenie świata (obliczenia chunków)
+1. krótka historia 
+    3. dzielenie świata (obliczenia chunków - ile bloków, trójkątów)
+    2. rotowanie bloków
 2. ogólne informacje o grafice komputerowej
     1. mnożenie macierzy i wektory (+ hitbox)
+    5. z-buffer i alternatywy
     2. pipeline
     3. shadery, w tym geometry shader (GPU szybsze od CPU, przekazywanie wielu punktów wolniejsze niż przekazanie jednego i klonowanie pkt na samej karcie graficznej)
-    4. nakładanie tekstury, zamiast wyliczania kształtu na podstawie pkt (prykład z kulą ziemską)
-    5. z-buffer
+    4. nakładanie tekstury, zamiast wyliczania kształtu na podstawie pkt (prykład z kulą ziemską, albo że każdy pixel tekstury to były by 2 trójkąty)
 3. zarządzanie wyświetlaniem
     1. nie wyświetlanie ścian kiedy bloki się stykają
     2. wyświetlanie tylko chunk w zasięgu
     3. podział świata na fragmenty, używanie oct/quad Tree
-    4. zmienny LOD (level of detail)
+    4. zmienny LOD (level of detail) + mipmapy
 4. zarządzanie pamięcią
     1. garbage collector jest wolny, lepiej ręcznie (java vs bedrock)
     2. lokalność cache przy ładowaniu chunk
@@ -80,7 +89,7 @@ The Z-buffer is a technology used in almost all contemporary computers, laptops,
 
 * wysokość chunk 256/384, rozmiar 16*16, to oznacza że na jeden chunk mamy 65536/98304 bloków 
 
-* mówiąc o chunkach ogólna idea [octTree](https://en.wikipedia.org/wiki/Octree), [quadTree](https://en.wikipedia.org/wiki/Quadtree) i [BSP](https://en.wikipedia.org/wiki/Binary_space_partitioning)
+* mówiąc o chunkach ogólna idea [octTree](https://en.wikipedia.org/wiki/Octree), [quadTree](https://en.wikipedia.org/wiki/Quadtree) i [BSP](https://en.wikipedia.org/wiki/Binary_space_partitioning) [K-D tree](https://en.wikipedia.org/wiki/K-d_tree)
 najważniejsze są obrazki i animacja przy quadTree, wykorzystać tą animacje żeby przejść do tematu wyświetlania mniejszej ilości szczegółów dalej od gracza
 
 * dzielenie świata na fragmenty
@@ -99,5 +108,38 @@ przy mc można zrobić pikseloze jak w quadTree, ale normalnie używa się [mipm
 
 ===============================================================================================================
 
+https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview
+
+z buffer należy do ostatniego kroku pipeline
 
 
+
+jedną z optymalizacji jest wyliczenie całego chunku a następnie zapamiętanie w cache tego co należy wyświetlić
+i ten zapisany stan pozostanie niezmieniony dopóki my czegoś nie zrobimy (zniszczymy/zbudujemy blok)
+w ten sposób zmniejszamy ilość obliczeń - podejście leniwe (wyliczamy tylko kiedy potrzeba)
+
+
+https://en.wikipedia.org/wiki/Polygonal_modeling
+https://en.wikipedia.org/wiki/Z-buffering               1974
+https://en.wikipedia.org/wiki/Ray_casting               1978–1980
+https://en.wikipedia.org/wiki/Ray_tracing_(graphics)    ~1982
+
+
+https://en.wikipedia.org/wiki/Graphics_pipeline
+
+In computer graphics, a computer graphics pipeline, rendering pipeline or simply graphics pipeline, is a conceptual model that describes what steps a graphics system needs to perform to render a 3D scene to a 2D screen.[1] Once a 3D model has been created, for instance in a video game or any other 3D computer animation, the graphics pipeline is the process of turning that 3D model into what the computer displays.[2]   Because the steps required for this operation depend on the software and hardware used and the desired display characteristics, there is no universal graphics pipeline suitable for all cases. However, graphics application programming interfaces (APIs) such as Direct3D and OpenGL were created to unify similar steps and to control the graphics pipeline of a given hardware accelerator. These APIs abstract the underlying hardware and keep the programmer away from writing code to manipulate the graphics hardware accelerators (AMD/Intel/NVIDIA etc.).
+
+The model of the graphics pipeline is usually used in real-time rendering. Often, most of the pipeline steps are implemented in hardware, which allows for special optimizations. The term "pipeline" is used in a similar sense to the pipeline in processors: the individual steps of the pipeline run in parallel as long as any given step has what it needs.
+
+The 3D pipeline usually refers to the most common form of computer 3D rendering called 3D polygon rendering[citation needed], distinct from raytracing and raycasting. In raycasting, a ray originates at the point where the camera resides, and if that ray hits a surface, the color and lighting of the point on the surface where the ray hit is calculated. In 3D polygon rendering the reverse happens - the area that is in view of the camera is calculated, and then rays are created from every part of every surface in view of the camera and traced back to the camera.[3]
+
+
+https://www.quora.com/What-is-the-difference-between-ray-tracing-and-ray-casting
+
+Ray casting, ray tracing and ray marching all tend to be used interchangeably as a generalists catch-all term for a rendering process which relies on computed lines of intersection, but there are subtle distinctions implied when speaking precisely.
+
+Ray casting is a process where points of intersection with a line are computed analytically, using formulas of intersection.
+
+Ray marching is a specific algorithm, a variant on ray casting where samples are taken down a line to test for intersections or other criteria. This is easier to implement and allows for speed optimizations via number of samples, but is not as precise even when large numbers of samples are used.
+
+Ray tracing is a more complex series of tasks which uses ray casting and/or ray marching to compute not only the point of intersection between origin and object surface (or voxel cell etc) but which iteratively computes secondary and tertiary rays, which can be used to collect data used typically (but not exclusively) for calculation of reflected or refracted light.
