@@ -1,19 +1,9 @@
-# comment
-
-from copy import deepcopy
+# używając programowania dynamicznego sprawdzam wszystkie kombinacje podziałów
+# lini tekstu, dp[i] zawiera -1 jesli nie znalazlem podziału do i-tej litery, 
+# lub maksymalną sumę kwadratów długości słów znalezionych do i-tej litery
 
 words = []
 lenWords = 0
-
-mxSum = -1
-storedRes = []
-
-def save(sum,res):
-    global mxSum
-    global storedRes
-    mxSum = sum
-    storedRes = deepcopy(res)
-    # print(storedRes)
 
 def binSearch(b,e,x):
     # print(b,int((b+e)/2),e,x,'\t',words[int((b+e)/2)-1],words[int((b+e)/2)],words[int((b+e)/2)+1])
@@ -29,22 +19,31 @@ def binSearch(b,e,x):
         return False
 
 def isInWords(t):
-    # if binSearch(0,lenWords,t) != (t in words):
-    #     print(binSearch(0,lenWords,t), t in words, t)
     return binSearch(0,lenWords,t)
-    # return t in words
 
-def splitWords(line,sum,res):
-    # print(line, res)
-    if not line:
-        if mxSum < sum:
-            save(sum,res)
-            return
-    for i in range(len(line)):
-        tmp = line[0:i+1]
-        if isInWords(tmp):
-            splitWords(line[i+1:],sum+(len(tmp))**2,res + [tmp])
-
+def splitWords(line):
+    lineLen = len(line)
+    dp = [-1 for i in range(lineLen+1)]
+    dp[0] = 0
+    res = [[] for i in range(lineLen+1)]
+    changed = True
+    while changed:
+        # print(res)
+        changed = False
+        for i in range(lineLen+1)[::-1]:
+            if dp[i] != -1:
+                j = 0
+                while i+j+1 <= lineLen:
+                    tmp = line[i:i+1+j]
+                    if isInWords(tmp):
+                        ln = len(tmp)
+                        val = (ln*ln) + dp[i]
+                        if dp[i+1+j] < val:
+                            dp[i+1+j] = val
+                            res[i+1+j] = res[i] + [tmp]
+                            changed = True
+                    j+=1
+    return res[lineLen]
 
 with open('polish_words.txt','r') as wordsFile:
     for w in wordsFile:
@@ -60,8 +59,7 @@ with open('zad2_output.txt','w') as out:
         for line in file:
             if line[-1] == '\n':
                 line = line[:-1]
-            # print(line)
-            splitWords(line,0,[])
+            storedRes = splitWords(line)
             for s in storedRes:
                 out.write(str(s)+' ')
                 # print(s, end=' ')
@@ -69,11 +67,3 @@ with open('zad2_output.txt','w') as out:
             # print()#new line
             mxSum = -1
             storedRes = []
-
-# alfaTab = ['a','ojczyzno','albańczykiem']
-# for alfa in alfaTab:
-#     print(binSearch(0,lenWords,alfa), alfa in words, alfa)
-
-# for w in words:
-#     if binSearch(0,lenWords,w) != (w in words):
-#         print(binSearch(0,lenWords,w), w in words, w)
