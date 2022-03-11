@@ -6,7 +6,11 @@
 
 from copy import deepcopy
 from collections import deque
-from math import sqrt
+
+hashMap = {} #zapamiętuje wszystkie ułożenia planszy
+
+def figuresToKey(wKing,wRook,bKing):
+    return wKing + wRook + bKing
 
 # plansza
 # 8
@@ -58,11 +62,6 @@ def isPat(wKing,wRook,bKing):#czarny krol nie moze wykonac zadnego ruchu
     return True
     #pat kiedy wszystkie ruchy sa niepoprawne, jesli ruch poprawny to return false
 
-def isWrongDirection(bKing,old,new):#nie oplaca sie oddalac od czarnego krola!
-    dist = lambda a,b : sqrt((ord(a[0])-ord(b[0]))**2 + (ord(a[1])-ord(b[1]))**2)
-    return dist(bKing,old) + 1 < dist(bKing,new)
-    #odleglosc zwiekszyla sie o wiecej niz 1
-
 def isValidMove(turn,wKing,wRook,bKing):
     if wKing == bKing or wRook == bKing or wRook == wKing:
         return False #wejscie na inna figure
@@ -83,10 +82,16 @@ def queueInsert(que,turn,wKing,wRook,bKing,count,path):
     if count > 30:
         return #nie udalo sie znalezc rozwiazania, czyszczenie listy
 
+    key = figuresToKey(wKing,wRook,bKing)
+    # jeżeli ten układ już jest w hashMap to nie dodajemy go do que
+    if key in hashMap:
+        return
+
     if isValidMove(turn,wKing,wRook,bKing):
         if isWin(wKing,wRook,bKing):
             que.appendleft([turn,wKing,wRook,bKing,count,path])#znalezione zwyciestwo, w nastepnym while w round wyjscie z petli
         else:
+            hashMap[key] = count #zapamiętujemy wszystkie układy planszy
             que.append([turn,wKing,wRook,bKing,count,path])
     return
 
@@ -118,16 +123,12 @@ def round(Turn,whiteKing,whiteRook,blackKing):
         else: #white
             for move in kingMoves:
                 WKing = move(wKing)
-                if isWrongDirection(bKing,wKing,WKing):
-                    continue
                 if not isOutsideBoard(WKing):
                     queueInsert(que,'black',WKing,wRook,bKing,count+1,path)
             for mv in rookMoves:
                 tmp = wRook
                 for i in range(8):
                     tmp = mv(tmp)
-                    if isWrongDirection(bKing,wRook,tmp):
-                        break
                     if tmp == bKing or tmp == wKing or isOutsideBoard(tmp): #wieza natrafila na przeszkode, nie moze dalej isc
                         break
                     queueInsert(que,'black',wKing,tmp,bKing,count+1,path)
