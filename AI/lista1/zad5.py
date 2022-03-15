@@ -54,8 +54,72 @@ def randomFill():
             a[i] = (1 if random.random()>=0.5 else 0)
     return
 
+def zad4(idx):
+    val = (rows[idx] if idx<n else columns[idx-n])
+    rowColumn = True #True - row, False - column
+    if idx >= n:
+        idx-=n
+        rowColumn = False
+
+    res = n*m
+    if rowColumn:#row
+        oneCount = sum([arr[idx][i]==1 for i in range(n)])
+        for i in range(n-val+1):
+            changes = 0
+            oneCopy = oneCount
+            for j in range(val):
+                if arr[idx][i+j] == 0:
+                    changes+=1
+                else:
+                    oneCopy-=1
+            changes+=oneCopy
+            res = min(res,changes)
+        return res
+    else:#column
+        oneCount = sum([arr[i][idx]==1 for i in range(n)])
+        for i in range(m-val+1):
+            changes = 0
+            oneCopy = oneCount
+            for j in range(val):
+                if arr[i+j][idx] == 0:
+                    changes+=1
+                else:
+                    oneCopy-=1
+            changes+=oneCopy
+            res = min(res,changes)
+        return res
+
+
+def switchArr(i,j):
+    arr[i][j] = 1 if arr[i][j] == 0 else 0
+
 def changePixel(idx):
-    pass
+    rowColumn = True #True - row, False - column
+    if idx >= n:
+        idx-=n
+        rowColumn = False
+
+    minVal, storedIdx = n*m,-1
+    if rowColumn:#row
+        for i in range(m):
+            switchArr(idx,i)
+            tmp = zad4(i) + zad4(idx)
+            if tmp < minVal:
+                minVal = tmp
+                storedIdx = i
+            switchArr(idx,i)
+        switchArr(idx,storedIdx)    
+    else:#column
+        for i in range(n):
+            switchArr(i,idx)
+            tmp = zad4(i) + zad4(idx)
+            if tmp < minVal:
+                minVal = tmp
+                storedIdx = i
+            switchArr(i,idx)
+        switchArr(storedIdx,idx)
+    return
+
 
 def tryToSolve():
     counter = 2*n*m #po jakims czasie zacznij od poczatku
@@ -75,10 +139,13 @@ def nonogram():
     for i in range(n):#przygotowanie tablicy rozmiaru n x m
         arr.append([0 for j in range(m)])
 
+    randCount = 0
     while not solved():
+        randCount+=1
         randomFill()
         tryToSolve()
-    
+    print('ilosc randomFill:',randCount)
+
     printArr()
     return
 
@@ -108,3 +175,13 @@ with open('zad5_output.txt','w') as out:
                 else:
                     columns.append(int(line))
         nonogram()
+
+# 4 4
+# 1
+# 2
+# 3
+# 4
+# 4
+# 3
+# 2
+# 1
