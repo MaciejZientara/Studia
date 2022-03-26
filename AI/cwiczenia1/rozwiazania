@@ -1,0 +1,59 @@
+1)
+a) 1 w najbardziej lewym i prawym, oraz 1 w górnym i dolnym
+w ten sposób mamy 2 opcje, lewy-górny + prawy-dolny lub lewy-dolny + prawy-górny
+
+b) 1 w każdym wierszu i każdej kolumnie, wtedy w pierwszym wierszu mamy n możliwości
+potem w drugim wierszu mamy n-1, potem n-2, czyli mamy n! możliwości, a n! > n 
+(analogicznie do blokowania przy hetmanach/królowych tylko bez zakazanych skosów)
+
+2)
+najpierw znajdujemy te na całą długość kolumny lub wiersza (pewniaki)
+potem możemy okreslić te bloki, które muszą być zamalowane - nie ważne jak ustawisz
+blok 3 elementowy w 5 okienkach, środkowy musi być zamalowany!
+
+4)
+Wystarczy zauważyć, że dla określonej ręki figuranta tylko określone ustawienia blotkarza pozwolą mu zwyciężyć.
+To oznacza, że można policzyć ile jest wygrywających ustawień / ilość wszystkich ustawień * 100%.
+# 1. royal flush
+# 2. straight flush
+# 3. four of a kind
+# 4. full house
+# 5. flush
+# 6. straight
+# 7. three of a kind
+# 8. two pair
+# 9. one pair
+# 10. high card
+Jeśli figurant wylosuje ustawienie full house to blotkarz może wygrać tylko mając straight flush lub four of a kind,
+wystarczy więc policzyć ile jest takich dostępnych ustawień, dodać je do siebie i podzielić przez wszystkie ustawienia.
+
+
+6)
+uniform cost search:
+BFS, kolejka priorytetowa wierzchołków, gdzie priorytetem jest koszt dojścia do niego (minimum)
+rozważamy wierzchołek jeśli nie odwiedzony lub koszt dojścia niższy niż do tej pory znaleziony
+
+mogą być dwie opcje:
+1. nieskończona ścieżka z wagami 0
+2. cykl z ujemnymi wagami
+
+
+8)
+zamiast myśleć o pozycji gracza i pozycji wszystkich skrzynek można zapamiętać tylko 
+pozycje skrzynek i w które strony mogą być przesunięte bez potrzeby przesunięcia innej skrzynki
+
+aby wyliczyc pierwszy stan potrzebna nam jest informacja o pozycji startowej gracza,
+ale do wyliczenia następnych stanów nie musimy jej już pamiętać - zmiana stanu następuje przy przesunięciu
+skrzynki, tylko gracz może ją przesunąć i pozycja gracza to stara pozycja skrzynki - możemy dzięki temu 
+wyliczyć BFS w jakich kierunkach można przesunąć teraz skrzynki - mamy dokładne informacje o nowym stanie gry
+
+9)
+a) skoro stan to zmienne aspekty gry to zakładam, że drogi nie mogą nagle zostać zamknięte ani nie powstają nowe,
+tak samo ze stacjami paliw - więc mamy zapamiętany graf i lokalizacje stacji globalnie, natomiast w stanach przechowujemy tylko:
+aktualną pozycję (wierzchołek) oraz stan baku
+w ten sposób wiemy gdzie jesteśmy i gdzie możemy dojechać, oraz będąc na wierzchołku ze stacją paliw możemy napełnić bak do pełna 
+(rozmiar baku też jest stały więc maksymalną pojemność również przechowuję globalnie)
+
+b) musimy pamiętać gdzie jesteśmy (wierzchołek), ile i jakich paczek mamy 
+(zakładam, że miejsce dostarczenia paczki nie może zostać dynamicznie zmienione - pamiętam globalnie połączenie [paczka,lokalizacja])
+zakładając, że tutaj również mamy bak i zużywamy paliwo potrzebujemy też zapamiętać stan baku dla każdego stanu
