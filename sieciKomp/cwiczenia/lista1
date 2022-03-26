@@ -1,0 +1,56 @@
+1)
+adres sieci:    10.0.0.0/8
+1adres ip:      10.1.2.3/8
+2adres ip:      10.1.2.4/8
+broadcast:      10.255.255.255/8
+
+adres sieci:    156.17.0.0/16
+1adres ip:      156.17.0.1/16
+2adres ip:      156.17.0.2/16
+broadcast:      156.17.255.255/16
+
+adres sieci:    99.99.99.96/27
+1adres ip:      99.99.99.99/27
+2adres ip:      99.99.99.98/27
+broadcast:      99.99.99.127/27
+
+adres sieci:    156.17.64.4/30
+1adres ip:      156.17.64.5/30
+2adres ip:      156.17.64.6/30
+broadcast:      156.17.64.7/30
+
+adres sieci:    123.123.123.123/32
+1adres ip:      -
+2adres ip:      -
+broadcast:      123.123.123.123/32
+
+2)
+każdą sieć można łatwo podzielić na 2 mniejsze, wymuszając że w jednej
+pierwszy ze zmiennych bitów (od adresu sieci do broadcast) jest 1 a w drugiej 0
+
+mozna podzielić sieć na (((1,1),1),(1,1))
+albo ((((1,1),1),1),1) - wtedy rozmiary sieci najmniejsze 2^12
+
+
+3)
+0.0.0.0/0   -> router A
+10.0.0.0/22 -> router B (zamiast 10.0.0.0/23 + 10.0.2.0/24 + 10.0.3.0/24 + 10.0.0.128/25)
+10.0.1.0/24 -> router C (wyjątek i bardziej precyzyjne 24>22 niż warunek wyżej)
+10.0.1.0/29 -> router C
+10.0.1.0/27 -> router B (zamiast 10.0.1.8/29 + 10.0.1.16/29 + 10.0.1.24/29)
+
+4)
+0.0.0.0/0   -> do routera A
+10.0.0.0/8  -> do routera B
+10.3.0.0/24 -> do routera C
+10.3.0.0/25 -> do routera B (zamiast 10.3.0.32/27 + 10.3.0.64/27 + 10.3.0.96/27)
+warunek dla B dokładniejszy niz dla C 25>24 więc odpowiednie podsieci tam trafią, a pozostałe do C
+
+5)
+Chcemy dopasować najlepiej czyli dla najdłuższej zgadzającej się maski - wystarczy posortować po długości masek malejąco.
+
+Wtedy jeśli dopasuje się do jakiegoś adresu A, załóżmy nie w prost, że najlepsze dopasowanie jest dla B.
+Ale żeby dopasowanie B było lepsze od A musi mieć dłuższą maskę, czyli być przed A w tablicy posortowanych,
+to oznacza że musiało by zostać przeanalizowane wcześniej niż A i odrzucone co jest sprzeczne z założeniami, że pasuje.
+
+6,7) narysować/opowiedzieć
