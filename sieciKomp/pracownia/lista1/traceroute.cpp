@@ -30,16 +30,6 @@ u_int16_t compute_icmp_checksum (const void *buff, int length)
 	return (u_int16_t)(~(sum + (sum >> 16)));
 }
 
-unsigned short swapBytes(unsigned short x){
-    return ((x&0xff00)>>8) | ((x&0xff)<<8);
-}
-
-void print_as_bytes (unsigned char* buff, ssize_t length)
-{
-	for (ssize_t i = 0; i < length; i++, buff++)
-		printf ("%.2x ", *buff);	
-}
-
 
 int main(int argc, char** argv){
     //sprawdzenie ilosci argumentow
@@ -86,7 +76,7 @@ int main(int argc, char** argv){
 	for (uint ttlCounter = 1;ttlCounter<30;ttlCounter++) {
         header.icmp_hun.ih_idseq.icd_seq = ttlCounter;//wykorzystuje go do okreslenia przy jakim ttl zostal wyslany pakiet
         header.icmp_cksum = 0;
-        header.icmp_cksum = compute_icmp_checksum((u_int16_t*)&header, sizeof(header));
+        header.icmp_cksum = compute_icmp_checksum((u_int16_t*)&header, sizeof(header));//wyliczam ponownie sume kontrolna
 
         int64_t startTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 
@@ -97,22 +87,11 @@ int main(int argc, char** argv){
         int repeat = 3;
         size_t headerLen = sizeof(header);
         while(repeat > 0){
-            printf("send\n");
-            // tv.tv_sec = 1;//czekamy co najwyzej sekunde, odswiezam timer
-            // retval = select(sockfd+1, NULL, &rfds, NULL, &tv);//usypanie, az bedzie mozna wyslac
-            // printf("retval dla send = %d\n",retval);
-            // if(retval != 1)//wystapil blad select/timeout
-            //     continue;
-            bytes_sent = sendto(sockfd, &header, headerLen, 0, (struct sockaddr*)&recipient, sizeof(recipient));
-            printf("bytes sent = %ld, header len = %ld\n", bytes_sent, headerLen);//debug
-            if(bytes_sent == EWOULDBLOCK){
-                printf("would block\n");
-                //ta funkcja sluzy zwolnieniu miejsca w file descriptor buffer, 
-                //spoznione pakiety zajmuja w nim miejsce i uniemozliwiaja wysylke nowych
-                recvfrom (sockfd, NULL, IP_MAXPACKET, MSG_DONTWAIT, NULL, NULL);
-                // nie chcemy czekac, jesli cos bylo to odczytujemy, ale wyrzucamy od razu wszystkie dane
+            tv.tv_sec = 1;//czekamy co najwyzej sekunde, odswiezam timer
+            retval = select(sockfd+1, NULL, &rfds, NULL, &tv);//usypanie, az bedzie mozna wyslac
+            if(retval != 1)//wystapil blad select/timeout
                 continue;
-            }
+            bytes_sent = sendto(sockfd, &header, headerLen, 0, (struct sockaddr*)&recipient, sizeof(recipient));
             if(bytes_sent == headerLen)
                 repeat--;
         }//wysylam 3 ping, sprawdzam tez czy wyslaly sie pelne header - jesli nie to powtarzam ping
@@ -131,7 +110,6 @@ int main(int argc, char** argv){
 
         tv.tv_sec = 1;//czekamy co najwyzej sekunde, odswiezam timer
         for(repeat=3;repeat>0;repeat--){
-            printf("ttl = %d, repeat = %d\n", ttlCounter, repeat);//debug
             retval = select(sockfd+1, &rfds, NULL, NULL, &tv);//usypanie, az bedzie mozna odczytac
 
             if(retval == -1){
@@ -141,7 +119,9 @@ int main(int argc, char** argv){
             }
             if(retval == 0){
                 //timeout
-                printf("RECEIVE TIMEOUT\n");
+                //odswiezam file descriptor, bez tego po pierwszym timeout kazdy kolejny select zwraca timeout
+                FD_ZERO(&rfds);
+                FD_SET(sockfd, &rfds);
                 break;
             }
             //mozna odebrac pakiet
@@ -159,27 +139,23 @@ int main(int argc, char** argv){
             icmp* icmp_header = (icmp*) icmp_packet;
             
             //sprawdzam czy pakiet nalezy do mnie (czy id == PID)
-
-            printf("icmp type = %d\n", icmp_header->icmp_type);
-
             if(icmp_header->icmp_type == 11){//time exceeded
                 ip* ip_head = (ip*) (icmp_packet+8);//+8 wyliczone ze struktury icmp time exceeded
                 ssize_t ip_head_len = 4 * ip_head->ip_hl;//ip_head to stary header IP
                 u_int8_t* old_packet = icmp_packet+8 + ip_head_len;
                 icmp* old_icmp = (icmp*) old_packet;
-                printf("TTL ip_head = %d, counter = %d\n",old_icmp->icmp_hun.ih_idseq.icd_seq, ttlCounter);
                 if(old_icmp->icmp_hun.ih_idseq.icd_seq != ttlCounter){
                     repeat++;//powtorz select, otrzymalismy stary pakiet (z poprzedniego wysylania, ma stary ttl)
                     continue;
                 }
                 if(old_icmp->icmp_hun.ih_idseq.icd_id != PID){
-                    repeat++;//powtorz select, otrzymalismy nie nalezacy do nas pakiet
+                    repeat++;//powtorz select, otrzymalismy nienalezacy do nas pakiet
                     continue;
                 }                
             }
             if(icmp_header->icmp_type == 0){//ping reply
                 if(icmp_header->icmp_hun.ih_idseq.icd_id != PID){
-                    repeat++;//powtorz select, otrzymalismy nie nalezacy do nas pakiet
+                    repeat++;//powtorz select, otrzymalismy nienalezacy do nas pakiet
                     continue;
                 }
                 ttlCounter = 100;//otrzymalismy odpowiedz od serwera, pozwala zakonczyc petle for
