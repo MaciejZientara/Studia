@@ -1,26 +1,21 @@
+from copy import deepcopy
+
+
 n = 0
 m = 0
-# pary (dlugosc,czy skonczony blok)
+# dlugosci segmentow
 rows = []
 columns = []
+# prawda/falsz czy kolumna/wiersz skonczone
+completedRowCol = []
 # 3 stany: -1 (blocked, tutaj nie mozna pokolorowac), 0 (empty, mozna pomalowac), 1 (filled, pokolorowane)
 arr = []
 
 # zwraca bool czy dany rzad/kolumna rozwiazana
-def correct(idx):
-    rowColumn = True #True - row, False - column
-    if idx >= n:
-        idx-=n
-        rowColumn = False
-    values = (rows[idx] if rowColumn==True else columns[idx])
-
-    ln = n if (rowColumn == False) else m
-    block = [0] * ln
-    for i in range(ln):
-        block[i] = (arr[idx][i] if (rowColumn == True) else arr[i][idx])
-
-    count = sum([block[i] for i in range(ln)])
-    if count != sum([v[0] for v in values]):
+def correct(block,values,ln):
+    # print('correct',block,values,end=' ')
+    count = sum([block[i]==1 for i in range(ln)])
+    if count != sum(values):
         return False
     
     onesInRow = 0 #jedynki pod rzad
@@ -28,167 +23,76 @@ def correct(idx):
     for b in block:
         if b!=1:
             if onesInRow!=0:
-                if onesInRow!=values[valIndex][0]:
+                if onesInRow!=values[valIndex]:
+                    # print('false')
                     return False
                 else:
                     valIndex+=1
             onesInRow = 0
         else:
             onesInRow+=1
+    # print('true')
     return True
 
 # zwraca bool czy calosc rozwiazana czy nie
 def solved():
     #pierwsze n wartosci to indeksy rows, kolejne m to indeksy columns
     for i in range(n+m):
-        if correct(i) == False:
-            return False
+        if completedRowCol[i] == False:
+            idx = i
+            rowColumn = True #True - row, False - column
+            if idx >= n:
+                idx-=n
+                rowColumn = False
+            values = (rows[idx] if rowColumn==True else columns[idx])
+
+            ln = n if (rowColumn == False) else m
+            block = [0] * ln
+            for j in range(ln):
+                block[j] = (arr[idx+1][j+1] if (rowColumn == True) else arr[j+1][idx+1])
+            if correct(block,values,ln) == False:
+                return False
+            else:
+                completedRowCol[i] = True
     return True
 
-#wypelnia caly blok: kolor lub blokada
-def obviousFill(block,values,ln,valLen):
-    if not values or values[0][0] == 0:#pusty blok
-        values[0][1] = True
-        for i in range(ln):
-            block[i] = -1
-
-    suma = valLen-1
-    for i in range(valLen):
-        suma+=values[i][0]
-    if suma == (ln-2):#wypelnia caly blok
-        idx = 1
-        for v in range(valLen):
-            values[v] = (values[v][0],True)
-            for i in range(values[v][0]):
-                block[idx] = 1
-                idx+=1
-            block[idx] = -1
-            idx+=1
-
-# niewazne jak ustawie segment pomiedzy blokadami, pewne pixele musza byc zamalowane
-def sureColor(block,values,ln,valLen):
-    if not values or values[0][0] == 0:#pusty blok
+# rekurencyjna funkcja pomocnicza dla brute force
+def bruteRec(sameForAllBlock, block, iter,valiter ,values,ln,valLen):
+    if valiter >= valLen:
+        # print(block,values,correct(block,values,ln))
+        if correct(block,values,ln):
+            # print('przed',sameForAllBlock,block,values)
+            for i in range(ln):
+                # if block[i]==0:
+                #     block[i]=-1
+                if sameForAllBlock[i]==0:
+                    sameForAllBlock[i] = (block[i] if block[i]!=0 else -1)
+                else:
+                    if sameForAllBlock[i]!=(block[i] if block[i]!=0 else -1):
+                        sameForAllBlock[i] = -2
+            # print('po',sameForAllBlock,block,values)
         return
-    suma = valLen-1
-    for i in range(valLen):
-        suma+=values[i][0]
-    if suma > int((ln-2)/2):#wypelnia co najmniej polowe bloku
-        # znalazlem sposob tylko kiedy jest 1 lub 2 segmenty
-        if valLen == 1:
-            for j in range(ln-values[0][0]-1,values[0][0]+1):
-                block[j] = 1
-        if valLen == 2:
-            if values[0][0] > values[1][0]:
-                for j in range(ln-values[0][0]-values[1][0]-2,values[0][0]+1):
-                    block[j] = 1
-            else:
-                for j in range(ln-values[0][0]-1,values[0][0]+values[1][0]+2):
-                    block[j] = 1
-        # if valLen == 3:#                                                                  !!! TODO !!!
+    if iter >= ln:
+        return
+    blockCopy = deepcopy(block)
+    while iter < ln:
+        if blockCopy[iter]!=-1:
+            if (iter+values[valiter]<=ln) and all([block[iter+i]!=-1 for i in range(values[valiter])]):
+                for i in range(values[valiter]):
+                    blockCopy[iter+i]=1
+                bruteRec(sameForAllBlock, blockCopy, iter+values[valiter]+1,valiter+1 ,values,ln,valLen)
+        blockCopy[iter] = (-1 if block[iter]==0 else block[iter])
+        iter += 1
 
-# przed pierwszym i po ostatnim segmencie blokada + jesli wszystkie segmenty reszta pól to blokady
-def blockWhenCompleted(block,values,ln):
-    if values[0][1]:#przed pierwszym
-        idx = 0
-        while block[idx] != 1:
-            block[idx] = -1
-            idx += 1
-    if values[-1][1]:#za ostatnim
-        idx = -1
-        while block[idx] != 1:
-            block[idx] = -1
-            idx -= 1
-    if all([v[1] for v in values]):#cały block zakonczony - zablokowac pozostale
-        for i in range(ln):
-            if block[i] != 1:
-                block[i] =- 1
-
-# oznacz zakonczone segmenty, jesli dwa pomalowane pixele nie moga nalezec do 2 roznych segmentow - polacz je ze soba
-def tryToComplete(block,values,ln,valLen):
-    # sums[i] = suma wszystkich values od 0 do i włącznie
-    sums = [v[0] for v in values]
-    for i in range(1,valLen):
-        sums[i] += sums[i-1]
-
-    iter = 0
-    while block[iter]!=1:
-        iter+=1
-    if iter-1-sums[0] < 1:#czy pierwszy pokolorowany pixel nalezy do pierwszego segmentu
-        ;
-
-
-    # moge zrobic brute force:
-    # chce poukladac wszystkie segmenty w zadanym blocku z uwzglednieniem blokad i juz pomalowanych pixeli
-    # jezeli jakis pixel jest pomalowany w kazdym ustawieniu to trzeba go pomalowac, 
-    # jezeli jest zablokowany to trzeba go zablokowac
-    # a kiedy ustawie wszystkie segmenty to pozostale pola oznaczam jako zablokowane
-    # 
-    # ten brute force rozwiaze mi bardzo duzo problemow,
-    # obviousFill, sureColor, blockWhenCompleted, firstLastDon'tFit
-    # ale tez trudniejsze czyli dodanie blokad jesli jakis segment jest zakotwiczony
-    # do jakiegos pokolorwanego pixela i nie ma mozliwosci dosiegnac do pewnych pol - te pola zablokowac
-    # 
-    # najpierw mimo wszystko wykonam pozostale funkcje - zmniejszy naklad pracy brute force
-    # dodac tablice zapisujaca czy dany blok juz spelniony (wszystkie values spelnione) - szybsze sprawdzanie
-    # czy warto puszczac ponownie te wszystkie funkcje czy nie ma sensu 
-
-
-
-
-
-
-
-    # jezeli jest ograniczone blokada z jednej strony to moge rozszerzac dopoki nie bedzie mialo dlugosci 
-    # oczekiwanej dla tego segmentu (skad wiem ktory to segment?)
-    
-    # jezeli jest ograniczone z jednej strony to moze poszukac gdzie jest nastepna blokada i rozpatrywac przedzialy
-    # zamiast cale bloki... 
-
-    # 
-    # co jezeli nie ograniczone z obu stron ale ma dlugosc oczekiwana dla pewnego segmentu
-    # 
-    # co jezeli ograniczone z obu stron blokadami ale jest kilka segmentow tej samej dlugosci i nie da sie okreslic ktory zostal zakocznony... 
-
-
-    # jeszcze tutaj dodac wypelnianie block pomiedzy zakonczonymi i oraz i+1 segmentem
-
-    # jezeli znalazlem 1 i natrafilem na blokade to bede rozpatrywac kolejny val index
-    # blok jest skonczony jezeli przynajmniej z jednej strony ma blokade
-    # dodaje blokade z drugiej strony i zapisuje, ze skonczony - tutaj uzywam onesInRow
-    
-    onesInRow = 0 #jedynki pod rzad
-    valIndex = 0
-    for i in range(ln):#znajdz dokonczone segmenty
-        if block[i]!=1:
-            if onesInRow!=0:
-                if onesInRow==values[valIndex][0]:#dokonczony segment
-                    values[valIndex] = (values[valIndex][0],True)
-                    block[i] = -1#blokada po segmencie
-                    block[i-1-values[valIndex][0]] = -1#blokada przed segmentem
-                if block[i]==-1:
-                    valIndex+=1
-            onesInRow = 0
-        else:
-            onesInRow+=1
-    print(block,values)
-
-# jesli pierwszy/ostatni segment jest dluzszy niz przestrzen miedzy blokadami - zablokuj cala ta przestrzen
-def firstLastDontFit(block,values,ln):
-    couldFit = True
-    for i in range(1,values[0][0]+1):
-        if block[i] == -1:
-            couldFit = False
-    if couldFit == False:
-        for i in range(1,values[0][0]+1):
-            block[i] == -1
-
-    couldFit = True
-    for i in range(ln-values[-1][0]-1,ln):
-        if block[i] == -1:
-            couldFit = False
-    if couldFit == False:
-        for i in range(ln-values[-1][0]-1,ln):
-            block[i] == -1
+# sprawdzam wszystkie mozliwe ustawienia z uwzglednieniem blokad i pomalowanych pixeli, jesli jakis pixel ma
+# taka sama wartosc dla wszystkich ustawien - taka wartosc mu przypisuje (blokada/pomalowanie)
+def bruteForce(block,values,ln,valLen):
+    result = [0 for i in range(ln)]
+    bruteRec(result,block,0,0,values,ln,valLen)
+    # print(result,block,values)
+    for i in range(ln):
+        if result[i]!=-2 and block[i]==0:
+            block[i]=result[i]
 
 # na wszystkich wierszach i kolumnach puszcza funkcje powyzej
 def tryToSolve():
@@ -209,11 +113,9 @@ def tryToSolve():
 
         valLen = len(values)
         # tutaj operacje na block
-        obviousFill(block,values,ln,valLen)
-        sureColor(block,values,ln,valLen)
-        tryToComplete(block,values,ln,valLen)
-        blockWhenCompleted(block,values,ln)
-        firstLastDontFit(block,values,ln)
+        # print('przed', block,values)
+        bruteForce(block,values,ln,valLen)
+        # print('po', block,values)
 
         # zapisz zmiany
         for i in range(ln):
@@ -226,10 +128,13 @@ def tryToSolve():
         else:
             columns[idx] = values
 
+# przygotowuje plansze i stara sie ja rozwiazac
 def nonogram():
     #przygotowanie tablicy rozmiaru n x m
     global arr
+    global completedRowCol
     arr = [[0 for j in range(m+2)] for i in range(n+2)]
+    completedRowCol = [False for i in range(n+m)]
 
     # dla ulatwienia operacji, ograniczam caly obrazek blokada
     for i in range(n+2):
@@ -239,13 +144,20 @@ def nonogram():
         arr[0][j] = -1
         arr[n+1][j] = -1
 
-    # while not solved():
-    #     tryToSolve()
+    while not solved():
+        tryToSolve()
+    #     printArr()
+    #     print('\n')
 
-    tryToSolve()
-    # solved()
+    # tryToSolve()
+    # printArr()
+    # print('\n')
+    # tryToSolve()
+    # printArr()
+    # print('\n')
     # tryToSolve()
     printArr()
+    # print(solved())
     return
 
 # wypisuje cala plansze
@@ -268,7 +180,7 @@ with open('zad_output.txt','w') as out:
                 copyOfN = n
                 first = False
             else:
-                values = [(int(x),False) for x in line.split()]
+                values = [int(x) for x in line.split()]
                 if copyOfN > 0:
                     copyOfN-=1
                     rows.append(values)
