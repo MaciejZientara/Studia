@@ -53,7 +53,7 @@ def solved():
     return True
 
 # rekurencyjna funkcja pomocnicza dla brute force
-def bruteRec(sameForAllBlock, block, iter,valiter ,values,ln,valLen):
+def bruteRec(sameForAllBlock, block, iter,valiter ,values,ln,valLen,limits):
     if valiter >= valLen:
         if correct(block,values,ln):
             for i in range(ln):
@@ -63,23 +63,23 @@ def bruteRec(sameForAllBlock, block, iter,valiter ,values,ln,valLen):
                     if sameForAllBlock[i]!=(block[i] if block[i]!=0 else -1):
                         sameForAllBlock[i] = -2
         return
-    if iter >= ln:
+    if iter >= limits[valiter]:#ln:
         return
     blockCopy = deepcopy(block)
-    while iter < ln:
+    while iter < limits[valiter]:#ln
         if blockCopy[iter]!=-1:
             if (iter+values[valiter]<=ln) and all([block[iter+i]!=-1 for i in range(values[valiter])]):
                 for i in range(values[valiter]):
                     blockCopy[iter+i]=1
-                bruteRec(sameForAllBlock, blockCopy, iter+values[valiter]+1,valiter+1 ,values,ln,valLen)
+                bruteRec(sameForAllBlock, blockCopy, iter+values[valiter]+1,valiter+1 ,values,ln,valLen,limits)
         blockCopy[iter] = (-1 if block[iter]==0 else block[iter])
         iter += 1
 
 # sprawdzam wszystkie mozliwe ustawienia z uwzglednieniem blokad i pomalowanych pixeli, jesli jakis pixel ma
 # taka sama wartosc dla wszystkich ustawien - taka wartosc mu przypisuje (blokada/pomalowanie)
-def bruteForce(block,values,ln,valLen):
+def bruteForce(block,values,ln,valLen,limits):
     result = [0 for i in range(ln)]
-    bruteRec(result,block,0,0,values,ln,valLen)
+    bruteRec(result,block,0,0,values,ln,valLen,limits)
     for i in range(ln):
         if result[i]!=-2 and block[i]==0:
             block[i]=result[i]
@@ -104,8 +104,14 @@ def tryToSolve():
             block[i] = (arr[idx+1][i] if (rowColumn == True) else arr[i][idx+1])
 
         valLen = len(values)
+
+        limits = [0 for v in values]
+        limits[0] = ln-(sum(values)+valLen-2)
+        for i in range(1,valLen):
+            limits[i] = limits[i-1]+values[i-1]+1
+
         # tutaj operacje na block
-        bruteForce(block,values,ln,valLen)
+        bruteForce(block,values,ln,valLen,limits)
 
         # zapisz zmiany
         for i in range(ln):
