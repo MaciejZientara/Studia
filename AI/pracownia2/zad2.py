@@ -147,7 +147,9 @@ def makeFirstState():
     moves = (BFS(crates,playerPosition))[0]
     return makeState(crates,moves),playerPosition
 
-def isValid(crates):#tylko sprawdzam czy nie ma skrzynek na sobie
+def isValid(crates,moves):#tylko sprawdzam czy nie ma skrzynek na sobie
+    if not isWin and ('0' in moves):
+        return False #                                                       dead states
     return all([crates[i] not in crates[i+1:] for i in range(len(crates))])
 
 def sokoban():
@@ -156,18 +158,21 @@ def sokoban():
     stateQue.append(firstState)
     gameStates[firstState] = ('',plPos)
 
-    currentState = ''
+    reultPath = 0
     while stateQue: #not empty
         currentState = stateQue.popleft()
-        if isWin(currentState):
-            break
-        
+
         curLen = len(currentState)
         crates = ['--' for i in range(int(curLen/3))]
         moves = ['-' for i in range(int(curLen/3))]
         for i in range(int(curLen/3)):
             crates[i] = currentState[3*i:3*i+2]
             moves[i] = currentState[3*i+2]
+
+        if isWin(currentState):
+            tmpPath = gameStates[currentState][0]
+            if (reultPath == 0) or (len(reultPath) > len(tmpPath)):
+                reultPath = tmpPath
 
         for m in range(len(moves)):
             visited = (BFS(crates,gameStates[currentState][1]))[1]
@@ -181,7 +186,7 @@ def sokoban():
                     sortCrate = sorted(crates)
                     newMoves = (BFS(sortCrate,oldCratePosition))[0]
                     newState = makeState(sortCrate,newMoves)
-                    if isValid(sortCrate):
+                    if isValid(sortCrate,newMoves):
                         posBeforePush = move(oldCratePosition,reverseMove[moveMap[mM]])
                         path = visited[charToHex(posBeforePush[0])][charToHex(posBeforePush[1])]
                         if path == 0:
@@ -193,8 +198,10 @@ def sokoban():
                             stateQue.append(newState)
                     crates[m] = oldCratePosition
 
-    out.write(gameStates[currentState][0] + '\n')
-    print(gameStates[currentState][0])
+
+
+    print(reultPath)
+    out.write(str(reultPath)+'\n')
 
 with open('zad_output.txt','w') as out:
     with open('zad_input.txt','r') as file:
