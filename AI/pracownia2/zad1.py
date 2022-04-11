@@ -1,6 +1,5 @@
 from copy import deepcopy
 
-
 n = 0
 m = 0
 # dlugosci segmentow
@@ -13,7 +12,6 @@ arr = []
 
 # zwraca bool czy dany rzad/kolumna rozwiazana
 def correct(block,values,ln):
-    # print('correct',block,values,end=' ')
     count = sum([block[i]==1 for i in range(ln)])
     if count != sum(values):
         return False
@@ -24,14 +22,12 @@ def correct(block,values,ln):
         if b!=1:
             if onesInRow!=0:
                 if onesInRow!=values[valIndex]:
-                    # print('false')
                     return False
                 else:
                     valIndex+=1
             onesInRow = 0
         else:
             onesInRow+=1
-    # print('true')
     return True
 
 # zwraca bool czy calosc rozwiazana czy nie
@@ -59,18 +55,13 @@ def solved():
 # rekurencyjna funkcja pomocnicza dla brute force
 def bruteRec(sameForAllBlock, block, iter,valiter ,values,ln,valLen):
     if valiter >= valLen:
-        # print(block,values,correct(block,values,ln))
         if correct(block,values,ln):
-            # print('przed',sameForAllBlock,block,values)
             for i in range(ln):
-                # if block[i]==0:
-                #     block[i]=-1
                 if sameForAllBlock[i]==0:
                     sameForAllBlock[i] = (block[i] if block[i]!=0 else -1)
                 else:
                     if sameForAllBlock[i]!=(block[i] if block[i]!=0 else -1):
                         sameForAllBlock[i] = -2
-            # print('po',sameForAllBlock,block,values)
         return
     if iter >= ln:
         return
@@ -89,7 +80,6 @@ def bruteRec(sameForAllBlock, block, iter,valiter ,values,ln,valLen):
 def bruteForce(block,values,ln,valLen):
     result = [0 for i in range(ln)]
     bruteRec(result,block,0,0,values,ln,valLen)
-    # print(result,block,values)
     for i in range(ln):
         if result[i]!=-2 and block[i]==0:
             block[i]=result[i]
@@ -97,6 +87,8 @@ def bruteForce(block,values,ln,valLen):
 # na wszystkich wierszach i kolumnach puszcza funkcje powyzej
 def tryToSolve():
     for i in range(n+m):
+        if completedRowCol[i] == True:
+            continue
         idx = i
         
         rowColumn = True #True - row, False - column
@@ -113,9 +105,7 @@ def tryToSolve():
 
         valLen = len(values)
         # tutaj operacje na block
-        # print('przed', block,values)
         bruteForce(block,values,ln,valLen)
-        # print('po', block,values)
 
         # zapisz zmiany
         for i in range(ln):
@@ -146,18 +136,8 @@ def nonogram():
 
     while not solved():
         tryToSolve()
-    #     printArr()
-    #     print('\n')
 
-    # tryToSolve()
-    # printArr()
-    # print('\n')
-    # tryToSolve()
-    # printArr()
-    # print('\n')
-    # tryToSolve()
     printArr()
-    # print(solved())
     return
 
 # wypisuje cala plansze
