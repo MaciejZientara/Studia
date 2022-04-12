@@ -59,7 +59,6 @@ def move(position,dir):
         return position[0] + hexToChar(charToHex(position[1])+1)
     return '--'
 
-
 def BFS(crates, player):#podaje liste z posortowanymi skrzyniami oraz pozycje gracza
     # zwraca liste ruchow skrzyn odpowiadajacej kolejnosci skrzyn podanych w argumencie
     clen = len(crates)
@@ -125,7 +124,6 @@ def makeState(crates,moves):
         result += (x+y)
     return result
 
-
 def makeFirstState():
     global N
     N = len(arr)
@@ -175,7 +173,6 @@ def sokoban():
             if (resultPath == 0) or (len(resultPath) > len(tmpPath)):
                 resultPath = tmpPath
 
-
         for m in range(len(moves)):
             for gs in gameStates[currentState]:
                 visited = (BFS(crates,gs[1]))[1]
@@ -199,7 +196,8 @@ def sokoban():
                                 gameStates[newState] = [steps]
                                 stateQue.append(newState)
                             else:
-                                found = False
+                                found = False #dodaj nie wazne od dlugosci path o ile nie bylo jeszcze takiego path w gameStates
+                                # ten przypadek byl wtedy, gdy zgadza sie playerPos - jesli jest taki sam, to zapamietuje tylko ten z krotszym path
                                 for i in range(len(gameStates[newState])):
                                     if gameStates[newState][i][1] == steps[1]:
                                         found = True
@@ -212,10 +210,6 @@ def sokoban():
                                     if newState not in stateQue:
                                         stateQue.append(newState)
                         crates[m] = oldCratePosition
-
-    # debug
-    # for gs in gameStates:
-    #     print(gs,gameStates[gs],('WIN' if isWin(gs) else ''))
 
     print(resultPath)
     out.write(str(resultPath)+'\n')
