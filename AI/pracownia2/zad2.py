@@ -195,13 +195,22 @@ def sokoban():
                             if path == 0:
                                 path = ''
                             steps = (gs[0] + path + moveMap[mM], oldCratePosition)
-                            isIn = newState in gameStates
-                            if (not isIn) or (isIn and (len(steps[0]) < len(gameStates[newState][0][0]))):
+                            if newState not in gameStates:
                                 gameStates[newState] = [steps]
                                 stateQue.append(newState)
-                            if isIn and (len(steps[0]) == len(gameStates[newState][0][0])) and (steps not in gameStates[newState]):
-                                gameStates[newState].append(steps)
-                                stateQue.append(newState)
+                            else:
+                                found = False
+                                for i in range(len(gameStates[newState])):
+                                    if gameStates[newState][i][1] == steps[1]:
+                                        found = True
+                                        if len(gameStates[newState][i][0]) > len(steps[0]):
+                                            gameStates[newState][i] = steps
+                                            if newState not in stateQue:
+                                                stateQue.append(newState)
+                                if not found:
+                                    gameStates[newState].append(steps)
+                                    if newState not in stateQue:
+                                        stateQue.append(newState)
                         crates[m] = oldCratePosition
 
     # debug
