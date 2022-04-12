@@ -8,7 +8,8 @@ M = 0
 
 endPosition = []
 
-gameStates = {}# slownik stan - (kroki,pozycja poczatkowa gracza dla tego stanu)
+# lista par, jesli jest wiecej niz 1 zestaw krokow tej samej dlugosci prowadzacych do danego stanu
+gameStates = {}# slownik stan - [(kroki,pozycja poczatkowa gracza dla tego stanu)]
 
 const0 = ord('0')
 constA = ord('a')
@@ -148,17 +149,17 @@ def makeFirstState():
     return makeState(crates,moves),playerPosition
 
 def isValid(crates,moves):#tylko sprawdzam czy nie ma skrzynek na sobie
-    if not isWin and ('0' in moves):
-        return False #                                                       dead states
+    # if not isWin and ('0' in moves):
+    #     return False #                                                       dead states
     return all([crates[i] not in crates[i+1:] for i in range(len(crates))])
 
 def sokoban():
     stateQue = deque()
     firstState,plPos = makeFirstState()
     stateQue.append(firstState)
-    gameStates[firstState] = ('',plPos)
+    gameStates[firstState] = [('',plPos)]
 
-    reultPath = 0
+    resultPath = 0
     while stateQue: #not empty
         currentState = stateQue.popleft()
 
@@ -170,38 +171,45 @@ def sokoban():
             moves[i] = currentState[3*i+2]
 
         if isWin(currentState):
-            tmpPath = gameStates[currentState][0]
-            if (reultPath == 0) or (len(reultPath) > len(tmpPath)):
-                reultPath = tmpPath
+            tmpPath = gameStates[currentState][0][0]
+            if (resultPath == 0) or (len(resultPath) > len(tmpPath)):
+                resultPath = tmpPath
+
 
         for m in range(len(moves)):
-            visited = (BFS(crates,gameStates[currentState][1]))[1]
-            moveMap = {0b1000 : 'U', 0b100 : 'D', 0b10 : 'L', 0b1 : 'R'}
-            reverseMove = {'U' : 'D', 'D' : 'U', 'L' : 'R', 'R' : 'L'}
-            for mM in moveMap:
-                oldCratePosition = crates[m]
-                if (charToHex(moves[m]) & mM) > 0:
-                    # zamienic pozycje w crates, posortowac, bfs i przywrocic pozycje w crates
-                    crates[m] = move(crates[m],moveMap[mM])
-                    sortCrate = sorted(crates)
-                    newMoves = (BFS(sortCrate,oldCratePosition))[0]
-                    newState = makeState(sortCrate,newMoves)
-                    if isValid(sortCrate,newMoves):
-                        posBeforePush = move(oldCratePosition,reverseMove[moveMap[mM]])
-                        path = visited[charToHex(posBeforePush[0])][charToHex(posBeforePush[1])]
-                        if path == 0:
-                            path = ''
-                        steps = (gameStates[currentState][0] + path + moveMap[mM], oldCratePosition)
-                        isIn = newState in gameStates
-                        if (not isIn) or (isIn and (len(steps[0]) < len(gameStates[newState][0]))):
-                            gameStates[newState] = steps
-                            stateQue.append(newState)
-                    crates[m] = oldCratePosition
+            for gs in gameStates[currentState]:
+                visited = (BFS(crates,gs[1]))[1]
+                moveMap = {0b1000 : 'U', 0b100 : 'D', 0b10 : 'L', 0b1 : 'R'}
+                reverseMove = {'U' : 'D', 'D' : 'U', 'L' : 'R', 'R' : 'L'}
+                for mM in moveMap:
+                    oldCratePosition = crates[m]
+                    if (charToHex(moves[m]) & mM) > 0:
+                        # zamienic pozycje w crates, posortowac, bfs i przywrocic pozycje w crates
+                        crates[m] = move(crates[m],moveMap[mM])
+                        sortCrate = sorted(crates)
+                        newMoves = (BFS(sortCrate,oldCratePosition))[0]
+                        newState = makeState(sortCrate,newMoves)
+                        if isValid(sortCrate,newMoves):
+                            posBeforePush = move(oldCratePosition,reverseMove[moveMap[mM]])
+                            path = visited[charToHex(posBeforePush[0])][charToHex(posBeforePush[1])]
+                            if path == 0:
+                                path = ''
+                            steps = (gs[0] + path + moveMap[mM], oldCratePosition)
+                            isIn = newState in gameStates
+                            if (not isIn) or (isIn and (len(steps[0]) < len(gameStates[newState][0][0]))):
+                                gameStates[newState] = [steps]
+                                stateQue.append(newState)
+                            if isIn and (len(steps[0]) == len(gameStates[newState][0][0])) and (steps not in gameStates[newState]):
+                                gameStates[newState].append(steps)
+                                stateQue.append(newState)
+                        crates[m] = oldCratePosition
 
+    # debug
+    # for gs in gameStates:
+    #     print(gs,gameStates[gs],('WIN' if isWin(gs) else ''))
 
-
-    print(reultPath)
-    out.write(str(reultPath)+'\n')
+    print(resultPath)
+    out.write(str(resultPath)+'\n')
 
 with open('zad_output.txt','w') as out:
     with open('zad_input.txt','r') as file:
