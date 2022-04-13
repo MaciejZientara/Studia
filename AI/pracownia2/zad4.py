@@ -1,6 +1,5 @@
 from collections import deque
 
-
 arr = []
 N = 0
 M = 0
@@ -22,10 +21,14 @@ def hexToChar(x):
         return chr(constA + x - 10)
 
 def isWin(state):
-    return all([state[i:i+2] in endPosition for i in range(0,len(state),2)])
+    positions = [state[i:i+2] for i in range(0,len(state),2)]
+    for p in positions:
+        if p not in endPosition:
+            return False
+    return True
 
 def makeState(positions):
-    sorted(positions)
+    positions.sort()
     res = positions[0]
     for i in range(1,len(positions)):
         if positions[i-1]!=positions[i]:#usuwam duplikaty
@@ -51,57 +54,81 @@ def makeFirstState():
 
 def move(pos,dir):
     position = pos
+    i,j = charToHex(position[0]),charToHex(position[1])
     if dir == 'U':
-        position = hexToChar(charToHex(position[0])-1) + position[1]
+        i-=1
     if dir == 'D':
-        position = hexToChar(charToHex(position[0])+1) + position[1]
+        i+=1
     if dir == 'L':
-        position = position[0] + hexToChar(charToHex(position[1])-1)
+        j-=1
     if dir == 'R':
-        position = position[0] + hexToChar(charToHex(position[1])+1)
-    if arr[charToHex(position[0])][charToHex(position[1])] == '#':#wejscie w sciane = nie wykonanie ruchu
+        j+=1
+    if arr[i][j]=='#':#wejscie w sciane = nie wykonanie ruchu
         return pos
     else:
-        return position
+        return hexToChar(i)+hexToChar(j)
 
 def combinePositions(firstState):
     accaptableDifferentPositions = 3
-    state = ''
+    state = firstState
     path = ''
-    # w kolejce przechowuje pary (stan,path)
-    que = deque()
-    que.append((firstState,''))
     moveTable = ['U','D','L','R']
-    while que:
-        state,path = que.popleft()
-        if (len(state)/2) <= accaptableDifferentPositions:
+    #zachlanne zmniejszanie ilosci pozycji pojedynczymi ruchami
+    while (len(state)/2) > accaptableDifferentPositions:
+        if len(path) > 70:
             break
+        resPath = path
         positions = [state[i:i+2] for i in range(0,len(state),2)]
         for m in moveTable:
-            newPositions = []
-            for p in positions:
-                newPositions.append(move(p,m))
-            que.append((makeState(newPositions),(path+m)))
+            newPositions = [move(p,m) for p in positions]
+            tmpState = makeState(newPositions)
+            if len(tmpState) < len(state):
+                state = tmpState
+                resPath+=m
+        if path == resPath:#jeden ruch nie zmniejsza juz ilosci
+            break
+        path = resPath
+
+    #poruszanie sie po schemacie (zygzak)
+    zigzag1 = ['D','D','R','R','D','D','L','L']
+    for i in range(int(N/4)+1):
+        for z in zigzag1:
+            positions = [state[i:i+2] for i in range(0,len(state),2)]
+            state = makeState([move(p,z) for p in positions])
+            path+=z
+    zigzag2 = ['U','U','R','R','D','D','R','R']
+    for i in range(int(M/4)+1):
+        for z in zigzag2:
+            positions = [state[i:i+2] for i in range(0,len(state),2)]
+            state = makeState([move(p,z) for p in positions])
+            path+=z
+
+    print('comb',state,len(state)/2,path,len(path))
     return state,path
 
 #zakladam, ze state ma tylko kilka roznych pozycji (accaptableDifferentPositions w combinePositions)
-def BFS(firstState):
-    path = ''
-    # w kolejce przechowuje pary (stan,path)
+def BFS(firstState):#to jest za wolne!!!                           TODO przyspieszyc
+    # w kolejce przechowuje pary stan
     que = deque()
-    que.append((firstState,''))
+    que.append(firstState)
+    gameStates[firstState] = ''
     moveTable = ['U','D','L','R']
     while que:
-        state,path = que.popleft()
+        state = que.popleft()
+        path = gameStates[state]
+        # print(len(gameStates),len(path),path)
+        # print('BFS',state, len(state), len(path))
         if isWin(state):
             break
         positions = [state[i:i+2] for i in range(0,len(state),2)]
         for m in moveTable:
-            newPositions = []
-            for p in positions:
-                newPositions.append(move(p,m))
-            que.append((makeState(newPositions),(path+m)))
-
+            newPositions = [move(p,m) for p in positions]
+            newState = makeState(newPositions)
+            newPath = path+m
+            isIn = newState in gameStates
+            if not isIn:# or (isIn and (len(gameStates[newState]) > len(newPath))):
+                gameStates[newState] = newPath
+                que.append(newState)
     return path
 
 def komandos():
