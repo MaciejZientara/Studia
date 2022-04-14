@@ -1,0 +1,4 @@
+do kompresji komenda:
+tar cf Maciej_Zientara.tar.xz --use-compress-program='xz -9v' Maciej_Zientara/
+
+bedac w katalogu zawierajacym katalog Maciej_Zientara
