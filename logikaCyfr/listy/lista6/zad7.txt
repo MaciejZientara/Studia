@@ -1,0 +1,6 @@
+bit (flip-flop d_latch) z multilekserem:
+S  input
+00 q
+01 0
+10 nq
+11 d[]

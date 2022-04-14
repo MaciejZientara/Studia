@@ -1,0 +1,3 @@
+zatrzask (latch) updateuje Qa = d kiedy clk wysoki
+pozostale w zaleznosci od ZBOCZA zegara zmieniaja wartość
+Q na d
