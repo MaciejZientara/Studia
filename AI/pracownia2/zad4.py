@@ -68,6 +68,23 @@ def move(pos,dir):
     else:
         return hexToChar(i)+hexToChar(j)
 
+def debugArrPrint(state):
+    positions = [state[i:i+2] for i in range(0,len(state),2)]
+    for i in range(N):
+        for j in range(M):
+            tmp = arr[i][j]
+            pos = (hexToChar(i)+hexToChar(j))
+            isInPos = pos in positions
+            isInEnd = pos in endPosition
+            if isInPos and isInEnd:
+                tmp = 'B'
+            if isInPos:
+                tmp = 'S'
+            if isInEnd:
+                tmp = 'G'
+            print(tmp,end='')
+        print()
+
 def combinePositions(firstState):
     accaptableDifferentPositions = 3
     state = firstState
@@ -89,6 +106,8 @@ def combinePositions(firstState):
             break
         path = resPath
 
+    print('comb1',state,len(state)/2,path,len(path))
+    debugArrPrint(state)
     #poruszanie sie po schemacie (zygzak)
     zigzag1 = ['D','D','R','R','D','D','L','L']
     for i in range(int(N/4)+1):
@@ -103,12 +122,11 @@ def combinePositions(firstState):
             state = makeState([move(p,z) for p in positions])
             path+=z
 
-    print('comb',state,len(state)/2,path,len(path))
+    print('comb2',state,len(state)/2,path,len(path))
+    debugArrPrint(state)
     return state,path
 
-#zakladam, ze state ma tylko kilka roznych pozycji (accaptableDifferentPositions w combinePositions)
-def BFS(firstState):#to jest za wolne!!!                           TODO przyspieszyc
-    # w kolejce przechowuje pary stan
+def BFS(firstState):
     que = deque()
     que.append(firstState)
     gameStates[firstState] = ''
@@ -116,8 +134,6 @@ def BFS(firstState):#to jest za wolne!!!                           TODO przyspie
     while que:
         state = que.popleft()
         path = gameStates[state]
-        # print(len(gameStates),len(path),path)
-        # print('BFS',state, len(state), len(path))
         if isWin(state):
             break
         positions = [state[i:i+2] for i in range(0,len(state),2)]
@@ -137,7 +153,6 @@ def komandos():
     resultPath = BFS(combinedStete)
     print(combinedPath+resultPath)
     out.write(str(combinedPath)+str(resultPath)+'\n')
-
 
 with open('zad_output.txt','w') as out:
     with open('zad_input.txt','r') as file:
