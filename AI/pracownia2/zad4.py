@@ -76,54 +76,67 @@ def debugArrPrint(state):
             pos = (hexToChar(i)+hexToChar(j))
             isInPos = pos in positions
             isInEnd = pos in endPosition
-            if isInPos and isInEnd:
-                tmp = 'B'
             if isInPos:
                 tmp = 'S'
             if isInEnd:
                 tmp = 'G'
+            if isInPos and isInEnd:
+                tmp = 'B'
             print(tmp,end='')
         print()
 
+def moveState(state,dir):
+    positions = [state[i:i+2] for i in range(0,len(state),2)]
+    return makeState([move(p,dir) for p in positions])
+
 def combinePositions(firstState):
-    accaptableDifferentPositions = 3
+    desiredDifferentPositions = 2
     state = firstState
     path = ''
-    moveTable = ['U','D','L','R']
-    #zachlanne zmniejszanie ilosci pozycji pojedynczymi ruchami
-    while (len(state)/2) > accaptableDifferentPositions:
-        if len(path) > 70:
-            break
-        resPath = path
-        positions = [state[i:i+2] for i in range(0,len(state),2)]
-        for m in moveTable:
-            newPositions = [move(p,m) for p in positions]
-            tmpState = makeState(newPositions)
-            if len(tmpState) < len(state):
-                state = tmpState
-                resPath+=m
-        if path == resPath:#jeden ruch nie zmniejsza juz ilosci
-            break
-        path = resPath
 
+    # state = moveState(state,'R')
+    # path+='R'
+    # state = moveState(state,'D')
+    # path+='D'
+    # state = moveState(state,'L')
+    # path+='L'
+    # state = moveState(state,'D')
+    # path+='D'
+    # print('\n\n')
+    # print('comb0',state,len(state)/2,path,len(path))
+    # debugArrPrint(state)
+
+    #poruszanie sie po schemacie
+    circle = ['R','R','R','R','U','U','U','U','L','L','L','L','D','D','D','D']
+    for z in circle:
+        state = moveState(state,z)
+        path+=z
+
+    print('\n\n')
     print('comb1',state,len(state)/2,path,len(path))
-    debugArrPrint(state)
-    #poruszanie sie po schemacie (zygzak)
-    zigzag1 = ['D','D','R','R','D','D','L','L']
-    for i in range(int(N/4)+1):
-        for z in zigzag1:
-            positions = [state[i:i+2] for i in range(0,len(state),2)]
-            state = makeState([move(p,z) for p in positions])
-            path+=z
-    zigzag2 = ['U','U','R','R','D','D','R','R']
-    for i in range(int(M/4)+1):
-        for z in zigzag2:
-            positions = [state[i:i+2] for i in range(0,len(state),2)]
-            state = makeState([move(p,z) for p in positions])
-            path+=z
+    # debugArrPrint(state)
+
+    for i in range(max(M,N)+3):
+        z = 'R' if (i%2==0) else 'U'
+        state = moveState(state,z)
+        path+=z
 
     print('comb2',state,len(state)/2,path,len(path))
-    debugArrPrint(state)
+    # debugArrPrint(state)
+
+    state = moveState(state,'D')
+    path+='D'
+    state = moveState(state,'D')
+    path+='D'
+
+    for i in range(max(M,N)+3):
+        z = 'R' if (i%2==0) else 'U'
+        state = moveState(state,z)
+        path+=z
+
+
+    print('comb3',state,len(state)/2,path,len(path))
+    # debugArrPrint(state)
     return state,path
 
 def BFS(firstState):
