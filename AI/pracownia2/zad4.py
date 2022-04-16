@@ -100,11 +100,6 @@ def combinePositions(firstState):
     maxPathLength = 80
     state = firstState
     path = ''
-
-    # print('\n\n')
-    # print('combS',state,len(state)/2,path,len(path))
-    # debugArrPrint(state)
-
     # bede wykonwal losowe, zachlanne ruchy
     # jesli nie zmniejsza ilosci roznych pozycji to powtarzam losowanie,
     # jest mala szansa, ze nawet kiedy nie zmniejszy sie ilosc dalej wykonam ruch
@@ -119,12 +114,9 @@ def combinePositions(firstState):
                 path = newPath
         if (len(state) <= (desiredDifferentPositions*2)):
             break
-        # print('restart',newState,len(newState)/2,newPath,len(newPath))
+        # restart kiedy ilosc ruchow > max, ilosc roznych pozycji > oczekiwana
         state = firstState
         path = ''
-
-    # print('combE',state,len(state)/2,path,len(path))
-    # debugArrPrint(state)
     return state,path
 
 def BFS(firstState):
@@ -143,7 +135,7 @@ def BFS(firstState):
             newState = makeState(newPositions)
             newPath = path+m
             isIn = newState in gameStates
-            if not isIn:# or (isIn and (len(gameStates[newState]) > len(newPath))):
+            if not isIn:
                 gameStates[newState] = newPath
                 que.append(newState)
     return path
