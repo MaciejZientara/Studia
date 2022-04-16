@@ -1,7 +1,5 @@
 from collections import deque
-from random import choice
-from random import random
-from random import randrange
+import numpy as np
 
 arr = []
 N = 0
@@ -103,8 +101,8 @@ def combinePositions(firstState):
     state = firstState
     path = ''
 
-    print('\n\n')
-    print('combS',state,len(state)/2,path,len(path))
+    # print('\n\n')
+    # print('combS',state,len(state)/2,path,len(path))
     # debugArrPrint(state)
 
     # bede wykonwal losowe, zachlanne ruchy
@@ -113,19 +111,20 @@ def combinePositions(firstState):
     moveTable = ['U','D','L','R']#,'UU','DD','LL','RR','UUU','DDD','LLL','RRR','UUUU','DDDD','LLLL','RRRR']#,'UUUUU','DDDDD','LLLLL','RRRRR']
     while True:
         while (len(state) > (desiredDifferentPositions*2)) and (len(path) < maxPathLength):
-            m = (choice(moveTable)) * randrange(1,5) #kierunek * ilosc krokow
+            m = (np.random.choice(moveTable)) * np.random.randint(low=0, high=5) #kierunek * ilosc krokow
             newState = moveState(state,m)
             newPath = path+m
-            if (len(newState) < len(state)) or (random() < 0.2):
+            if (len(newState) < len(state)) or (np.random.random() < 0.2):
                 state = newState
                 path = newPath
         if (len(state) <= (desiredDifferentPositions*2)):
             break
-        print('restart',state,len(state)/2,path,len(path))
+        # print('restart',newState,len(newState)/2,newPath,len(newPath))
+        state = firstState
+        path = ''
 
-
-    print('combE',state,len(state)/2,path,len(path))
-    debugArrPrint(state)
+    # print('combE',state,len(state)/2,path,len(path))
+    # debugArrPrint(state)
     return state,path
 
 def BFS(firstState):
