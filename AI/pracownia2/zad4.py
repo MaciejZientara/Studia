@@ -103,7 +103,7 @@ def combinePositions(firstState):
     # bede wykonwal losowe, zachlanne ruchy
     # jesli nie zmniejsza ilosci roznych pozycji to powtarzam losowanie,
     # jest mala szansa, ze nawet kiedy nie zmniejszy sie ilosc dalej wykonam ruch
-    moveTable = ['U','D','L','R']#,'UU','DD','LL','RR','UUU','DDD','LLL','RRR','UUUU','DDDD','LLLL','RRRR']#,'UUUUU','DDDDD','LLLLL','RRRRR']
+    moveTable = ['U','D','L','R']
     while True:
         while (len(state) > (desiredDifferentPositions*2)) and (len(path) < maxPathLength):
             m = (np.random.choice(moveTable)) * np.random.randint(low=0, high=5) #kierunek * ilosc krokow
