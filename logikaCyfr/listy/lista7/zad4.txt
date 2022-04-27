@@ -1,0 +1,7 @@
+uzupelnienie do 2 to negacja calego rejestru +1
+
+1. ladujemy zanegowana wartosc
+2. robimy n przesuniec cyklicznych rejestru
+w kazdym przesunieciu wykonuje dodawanie do przesuwanego bitu
+najpierw dodaje 1 (zapamietane w D latch, zapiane z bit enable),
+potem w tym D latch zapamietuje carry bit dodawania

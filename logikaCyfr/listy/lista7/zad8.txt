@@ -1,0 +1,8 @@
+ostatnie 2 slajdy wykladu7
+
+slajd 18 (Licznik z ladowaniem rownoleglym)
+sciezka krytyczna to:
+q0 -> and -> and -> xor -> multiplexer
+multiplexer = and + or
+Tp + 3*Tand + Tor + Txor + Tsu = 186 [ns]
+
