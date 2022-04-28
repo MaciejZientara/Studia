@@ -13,6 +13,9 @@ V1> sudo dhclient enp0
 # jest nieroutowalnym metadresem używanym do oznaczania 
 # nieprawidłowego, nieznanego lub niemającego zastosowania celu.
 
+# mozna pokazac ze jest adres ip przypisany karcie
+V1> ip addr
+
 # Usuń konfigurację interfejsu enp0 poleceniem:
 V1> sudo dhclient -r enp0
 
