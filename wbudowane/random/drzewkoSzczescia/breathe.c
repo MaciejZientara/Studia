@@ -6,7 +6,7 @@
 //ledMask to maska do PORT uzywana zapalania okreslonych diod
 //state odpowiada za wypelnienie (OCR0A = 1<<state)
 //w zaleznosci od ud (1=up,0=down) wykonuje state++/state--
-volatile uint8_t counter, state, ledMask, ud;
+volatile uint8_t counter, state, ledMask, ledIter, ud;
 // przypisuje counter=COUNTER
 #define COUNTER 60
 
@@ -32,8 +32,9 @@ void nextMask(){//moze ustawiac kody greya?
   cli();//poczatek sekcji krytycznej
   counter = COUNTER;
   PORT &= ~ledMask;
-  ledMask = (ledMask+1) & 0b1111;
-  ledMask += (ledMask == 0);//nie chce miec sytuacji gdzie wszystkie diody zgaszone
+  ledIter = (ledIter+1) & 0b1111;
+  ledIter += (ledIter == 0);//nie chce miec sytuacji gdzie wszystkie diody zgaszone
+  ledMask = ledIter ^ (ledIter>>1);
   sei();//koniec sekcji krytycznej
 }
 
