@@ -4,11 +4,12 @@
 
 //counter to ile cykli zegara przy okreslonym wypelnieniu
 //ledMask to maska do PORT uzywana zapalania okreslonych diod
+//ledIter to iterator uzywany do kolejnych kodow Greya, ledMask ma kolejne kody Greya
 //state odpowiada za wypelnienie (OCR0A = 1<<state)
 //w zaleznosci od ud (1=up,0=down) wykonuje state++/state--
 volatile uint8_t counter, state, ledMask, ledIter, ud;
 // przypisuje counter=COUNTER
-#define COUNTER 60
+#define COUNTER 80
 
 #define PORT PORTB
 #define DDR DDRB
