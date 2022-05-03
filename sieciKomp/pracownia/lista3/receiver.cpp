@@ -88,15 +88,14 @@ void Receiver::receiveData(int& lfrcv, int lfrd){
         char sender_ip[IP_MAX_LENGTH];
         inet_ntop(AF_INET, &(currentSender.sin_addr), sender_ip, IP_MAX_LENGTH);
 
-        //rozpatrz przyjety pakiet tylko kiedy zgadza sie IP
-        if(strcmp(expected_ip,sender_ip)==0){
+        //rozpatrz przyjety pakiet tylko kiedy zgadza sie IP oraz port
+        if((strcmp(expected_ip,sender_ip)==0) && (currentSender.sin_port == sender->sin_port)){
             frameData* frD = new frameData(buffer);
             int frameNumber = offsetToFrameNr(frD->offset);
-            if(frameNumber > lfrd){
-                if(received[frameNumber-lfrd-1]!=-1){//jeszcze nie otrzymalem
-                    received[frameNumber-lfrd-1]=-1;
-                    que.push(*frD);
-                }
+            if((frameNumber > lfrd) && (received[frameNumber-lfrd-1]!=-1)){
+                //received[]!=-1 oznacza, ze jeszcze nie otrzymalem tego pakietu
+                received[frameNumber-lfrd-1]=-1;
+                que.push(frD);
             }
             else
                 delete frD;
@@ -108,9 +107,10 @@ void Receiver::receiveData(int& lfrcv, int lfrd){
 
 void Receiver::saveData(int& lfrd, int lfrcv){
     while(lfrd < lfrcv){
-        file.write((char*)que.top().data,que.top().size);
-        
+        file.write((char*)que.top()->data,que.top()->size);
+        frameData* tmp = que.top();
         que.pop();
+        delete tmp;
         lfrd++;
         received.incBegin();
     }
@@ -140,7 +140,7 @@ void Receiver::receive(int fileSize){
 
         printProgress(lfrd,lfrcv,frames);
     }
-    std::cout << "\nDONE\n";
+    std::cout << "\rDONE                                                                         \n";//duzo spacji, zeby zaslonic ewentualny tekst
 }
 
 Receiver::frameData::frameData(uint8_t *frame){
@@ -164,7 +164,7 @@ Receiver::frameData::frameData(uint8_t *frame){
 }
 
 Receiver::frameData::~frameData(){
-    // delete[] data;
+    delete[] data;
 }
 
 template <typename T>

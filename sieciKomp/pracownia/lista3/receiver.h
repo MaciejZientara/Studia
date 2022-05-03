@@ -63,8 +63,8 @@ class Receiver{
         ~frameData();
     };
     struct compareFrameData{
-        bool operator() (frameData const& f1, frameData const& f2){
-            return (f1.offset > f2.offset);
+        bool operator() (frameData const* f1, frameData const* f2){
+            return (f1->offset > f2->offset);
         }
     };
 
@@ -75,7 +75,7 @@ class Receiver{
         kiedy aktualny czas > od zapisanego to znaczy, ze nastapil timeout i trzeba wyslac ponownie request*/
     cycleBuffer<uint64_t> received;
     //tutaj dodaje nowe pakiety i stad odczytuje, zeby zapisac do pliku
-    priority_queue<frameData, vector<frameData>, compareFrameData> que;
+    priority_queue<frameData*, vector<frameData*>, compareFrameData> que;
 };
 
 #endif
