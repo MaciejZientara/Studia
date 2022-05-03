@@ -7,6 +7,7 @@ Receiver::Receiver(int sockfd, sockaddr_in *sender, string filename){
     while(!this->file.is_open())
         this->file.open(filename, fstream::out | fstream::app | fstream::ate /*| fstream::binary*/);
     // file << "output"; aby zapisac dane do pliku
+    received.resize(WINDOW_SIZE);
 }
 
 Receiver::~Receiver(){
@@ -29,6 +30,18 @@ string Receiver::makeRequest(int frameNumber, int fileSize){
     return res;
 }
 
+//jesli nie wyslalem jeszcze request dla danego frame lub nastapil timeout
+void Receiver::sendAllRequests(int lfrd, int fileSize){
+    uint64_t timeNow = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
+    uint64_t timeOUT = timeNow + TIMEOUT;
+    for(int i=0; i<WINDOW_SIZE; i++){
+        if(received[i]==0 || timeNow > received[i]){
+            sendRequest(makeRequest(lfrd+1+i,fileSize));
+            received[i] = timeOUT;
+        }
+    }
+}
+
 void Receiver::receive(int fileSize){
     int segments_acquired = 0, 
         lfrcv = 0, //lfr - last frame received
@@ -43,10 +56,32 @@ void Receiver::receive(int fileSize){
     kiedy odbiore pakiet dodaje go do kolejki, zwiekszam ilosc pakietow w kolejce
     oraz zwiekszam lfrcv
     moge odbierac pakiety dopoki ilosc pakietow w kolejce < WINDOW_SIZE ???
+
+    może niech ta kolejka przechowuje obiekty pomocniczej klasy
+    class Frame{
+        int offset, size;
+        uint8_t* data;
+
+        w konstruktorze zrobic cale parsowanie tekstu
+    };
+
+    teraz tworze nowy obiekt Frame i sprawdzam czy 
+    z taka sama zawartoscia (offset i size) jest juz w kolejce
+    jesli nie to dodaje do kolejki 
+    (czy robie instert w odpowiednie miejsce czy na koniec???)
+    
+    moze dodawac do kolejki priorytetowej zamiast kolejki 
+    i miec tablice bool otrzymanych
+    kiedy moge zwiekszyc lfrcv zaczne zdejmowac elementy ze szczytu heap
+    sortowanie po offset
+
+    w kolejce priorytetowej nie mam jak sprawdzi czy jakis frame juz 
+    byl dostarczony czy nie, ale do tego moge wykorzystac pomocnicza 
+    tablice bool otrzymanych
     */
 
     while (lfrcv < frames) {
-        // sliding_window.Populate();
+        sendAllRequests(lfrd,fileSize);
         // sliding_window.SelectData();
 
         // SegmentData *data = sliding_window.GetData();
@@ -63,6 +98,52 @@ void Receiver::receive(int fileSize){
         // }
     }
 
+}
 
 
+Receiver::frameData::frameData(uint8_t *frame){
+    int iter = 5;//zaczynam po "DATA "
+    int ofs = 0, siz = 0;
+    while(isdigit(frame[iter])){
+        ofs = 10*ofs + (frame[iter]-'0');
+        iter++;
+    }
+    iter++;//przejdz ze spacji do size
+    while(isdigit(frame[iter])){
+        siz = 10*siz + (frame[iter]-'0');
+        iter++;
+    }
+    iter++;//przejdz ze spacji do danych
+    
+    offset = ofs;
+    size = siz;
+    data = (frame + iter);
+}
+
+template <typename T>
+Receiver::cycleBuffer<T>::cycleBuffer(){
+    begin = 0;
+    size = 0;
+    arr = nullptr;
+}
+template <typename T>
+void Receiver::cycleBuffer<T>::resize(int size){
+    begin = 0;
+    this->size = size;
+    arr = new T[size]();//dodanie () powinno wyzerowac arr
+}
+template <typename T>
+Receiver::cycleBuffer<T>::~cycleBuffer(){
+    delete[] arr;
+}
+
+template <typename T>
+T& Receiver::cycleBuffer<T>::operator[] (int i){
+    return arr[(begin+i)%size];
+}
+
+template <typename T>
+void Receiver::cycleBuffer<T>::incBegin(){
+    arr[begin] = 0;
+    begin = (begin+1)%size;
 }

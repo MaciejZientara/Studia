@@ -8,7 +8,9 @@
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 #include <string.h> // bzero
-#include <cmath>
+#include <cmath> // ceil
+#include <queue> // priority queue
+#include <chrono>
 
 using namespace std;
 
@@ -21,6 +23,7 @@ class Receiver{
     private:
     void sendRequest(string req);
     string makeRequest(int segmentNumber, int fileSize);
+    void sendAllRequests(int lfrd, int fileSize);
 
     int sockfd;
     sockaddr_in *sender;
@@ -28,8 +31,43 @@ class Receiver{
     int frames;
     const static int WINDOW_SIZE = 2500;
     const static int FRAME_SIZE = 1000;
-    const static int MILISECONDS = 750;
+    const static int TIMEOUT = 750;
     const static int ADDRESS_LENGTH = 19;
+
+    template <typename T>
+    class cycleBuffer{
+        private:
+        int begin = 0, size;
+        T* arr;
+        public:
+        cycleBuffer();
+        // cycleBuffer(int size);
+        void resize(int size);
+        ~cycleBuffer();
+        T& operator[] (int i);
+        void incBegin();
+    };
+
+    class frameData{
+        public:
+        int offset, size;
+        uint8_t *data;
+        frameData(uint8_t *frame);
+    };
+    struct compareFrameData{
+        bool operator() (frameData const& f1, frameData const& f2){
+            return (f1.offset > f2.offset);
+        }
+    };
+
+    /*pozwala mi rozroznic czy pakiet ma timeout, nie zostal jeszcze wyslany, zostal otrzymany
+        0 - nie wyslano jeszcze request
+        -1 - otrzymano pakiet
+        else to timestamp+timeout czyli kiedy wyslalem request (milisekundy) + czas timeout,
+        kiedy aktualny czas > od zapisanego to znaczy, ze nastapil timeout i trzeba wyslac ponownie request*/
+    cycleBuffer<uint64_t> received;
+    //tutaj dodaje nowe pakiety i stad odczytuje, zeby zapisac do pliku
+    priority_queue<frameData, vector<frameData>, compareFrameData> que;
 };
 
 #endif
