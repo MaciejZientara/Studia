@@ -30,21 +30,20 @@ int Receiver::offsetToFrameNr(int offset){
     return (offset/FRAME_SIZE)+1;
 }
 
-string Receiver::makeRequest(int frameNumber, int fileSize){
-    // "GET {offset} {size}"
-    string res = "GET " + to_string(frameNrToOffset(frameNumber)) + " " + 
-                to_string(frameNumber == frames ? fileSize % FRAME_SIZE : FRAME_SIZE) + "\n";
-    //biore caly rozmiar FRAME lub dla ostatniego frame tyle ile zostalo z pliku do wczytania
-    return res;
-}
-
 //jesli nie wyslalem jeszcze request dla danego frame lub nastapil timeout
 void Receiver::sendRequests(int lfrd, int fileSize){
     uint64_t timeNow = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
     uint64_t timeOUT = timeNow + TIMEOUT;
     for(int i=0; i<WINDOW_SIZE; i++){
         if(received[i]==0 || timeNow > received[i]){
-            string req = makeRequest(lfrd+1+i,fileSize);
+            int frameNumber = lfrd+1+i;
+            // "GET {offset} {size}\n"
+            string req = "GET " + 
+                        to_string(frameNrToOffset(frameNumber)) + 
+                        " " + 
+                        to_string(frameNumber == frames ? fileSize % FRAME_SIZE : FRAME_SIZE) + 
+                        "\n";
+            //biore caly rozmiar FRAME lub dla ostatniego frame tyle ile zostalo z pliku do wczytania
             sendRequest(req);
             received[i] = timeOUT;
         }
@@ -90,15 +89,14 @@ void Receiver::receiveData(int& lfrcv, int lfrd){
 
         //rozpatrz przyjety pakiet tylko kiedy zgadza sie IP oraz port
         if((strcmp(expected_ip,sender_ip)==0) && (currentSender.sin_port == sender->sin_port)){
-            frameData* frD = new frameData(buffer);
+            unique_ptr<frameData> frD = make_unique<frameData>(buffer);
+            // frameData* frD = new frameData(buffer);
             int frameNumber = offsetToFrameNr(frD->offset);
             if((frameNumber > lfrd) && (received[frameNumber-lfrd-1]!=-1)){
                 //received[]!=-1 oznacza, ze jeszcze nie otrzymalem tego pakietu
                 received[frameNumber-lfrd-1]=-1;
-                que.push(frD);
+                que.push(move(frD));
             }
-            else
-                delete frD;
         }
     }
     while((received[lfrcv-lfrd]==-1) && lfrcv<frames)
@@ -108,9 +106,7 @@ void Receiver::receiveData(int& lfrcv, int lfrd){
 void Receiver::saveData(int& lfrd, int lfrcv){
     while(lfrd < lfrcv){
         file.write((char*)que.top()->data,que.top()->size);
-        frameData* tmp = que.top();
         que.pop();
-        delete tmp;
         lfrd++;
         received.incBegin();
     }

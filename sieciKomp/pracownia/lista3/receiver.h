@@ -11,6 +11,7 @@
 #include <cmath> // ceil
 #include <queue> // priority queue
 #include <chrono>
+#include <memory> // unique_ptr
 
 using namespace std;
 
@@ -22,7 +23,6 @@ class Receiver{
 
     private:
     void sendRequest(string req);
-    string makeRequest(int segmentNumber, int fileSize);
     void sendRequests(int lfrd, int fileSize);
     void receiveData(int& lfrcv, int lfrd);
     void saveData(int& lfrd, int lfrcv);
@@ -48,7 +48,6 @@ class Receiver{
         T* arr;
         public:
         cycleBuffer();
-        // cycleBuffer(int size);
         void resize(int size);
         ~cycleBuffer();
         T& operator[] (int i);
@@ -63,7 +62,7 @@ class Receiver{
         ~frameData();
     };
     struct compareFrameData{
-        bool operator() (frameData const* f1, frameData const* f2){
+        bool operator() (unique_ptr<frameData> const& f1, unique_ptr<frameData> const& f2){
             return (f1->offset > f2->offset);
         }
     };
@@ -75,7 +74,7 @@ class Receiver{
         kiedy aktualny czas > od zapisanego to znaczy, ze nastapil timeout i trzeba wyslac ponownie request*/
     cycleBuffer<uint64_t> received;
     //tutaj dodaje nowe pakiety i stad odczytuje, zeby zapisac do pliku
-    priority_queue<frameData*, vector<frameData*>, compareFrameData> que;
+    priority_queue<unique_ptr<frameData>, vector<unique_ptr<frameData>>, compareFrameData> que;
 };
 
 #endif
