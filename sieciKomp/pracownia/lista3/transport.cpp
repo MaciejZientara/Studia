@@ -93,5 +93,4 @@ int main(int argc, char** argv){
     checkArguments(argc, argv);
     //           adres IP , port , nazwa pliku i rozmiar
     downloadFile(argv[1],stoi(argv[2]),argv[3],stoi(argv[4]));
-    cout << "hello!\n";
 }

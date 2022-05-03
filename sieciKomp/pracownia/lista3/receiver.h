@@ -23,7 +23,13 @@ class Receiver{
     private:
     void sendRequest(string req);
     string makeRequest(int segmentNumber, int fileSize);
-    void sendAllRequests(int lfrd, int fileSize);
+    void sendRequests(int lfrd, int fileSize);
+    void receiveData(int& lfrcv, int lfrd);
+    void saveData(int& lfrd, int lfrcv);
+    void printProgress(int lfrd, int lfrcv, int frames);
+
+    int frameNrToOffset(int frameNumber);
+    int offsetToFrameNr(int offset);
 
     int sockfd;
     sockaddr_in *sender;
@@ -31,8 +37,9 @@ class Receiver{
     int frames;
     const static int WINDOW_SIZE = 2500;
     const static int FRAME_SIZE = 1000;
-    const static int TIMEOUT = 750;
-    const static int ADDRESS_LENGTH = 19;
+    const static int TIMEOUT = 500;
+    const static int SELECT_WAIT = 750;
+    const static int IP_MAX_LENGTH = 20;
 
     template <typename T>
     class cycleBuffer{
@@ -53,6 +60,7 @@ class Receiver{
         int offset, size;
         uint8_t *data;
         frameData(uint8_t *frame);
+        ~frameData();
     };
     struct compareFrameData{
         bool operator() (frameData const& f1, frameData const& f2){
