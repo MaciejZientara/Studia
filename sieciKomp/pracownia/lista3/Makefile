@@ -11,7 +11,7 @@ receiver.o: receiver.h receiver.cpp
 
 IP = 127.0.0.1
 PORT = 40001
-FILE = output.txt
+FILE = output
 SIZE = 8273645#15250
 test:
 	rm -f $(FILE) ./transport-binaries/$(FILE)
