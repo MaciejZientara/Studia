@@ -1,6 +1,5 @@
 from copy import deepcopy
-from collections import deque
-from random import randrange
+from random import randint
 
 n = 0
 m = 0
@@ -11,6 +10,8 @@ columns = []
 completedRowCol = []
 # 3 stany: -1 (blocked, tutaj nie mozna pokolorowac), 0 (empty, mozna pomalowac), 1 (filled, pokolorowane)
 arr = []
+# suma dlugosci wszystkich segmentow + ilosc segmentow-1
+totalLengthValues = []
 
 # zwraca bool czy dany rzad/kolumna rozwiazana
 def correct(block,values,ln):
@@ -36,26 +37,26 @@ def correct(block,values,ln):
 def solved():
     #pierwsze n wartosci to indeksy rows, kolejne m to indeksy columns
     for i in range(n+m):
-        if completedRowCol[i] == False:
-            idx = i
-            rowColumn = True #True - row, False - column
-            if idx >= n:
-                idx-=n
-                rowColumn = False
-            values = (rows[idx] if rowColumn==True else columns[idx])
+        # if completedRowCol[i] == False:
+        idx = i
+        rowColumn = True #True - row, False - column
+        if idx >= n:
+            idx-=n
+            rowColumn = False
+        values = (rows[idx] if rowColumn==True else columns[idx])
 
-            ln = n if (rowColumn == False) else m
-            block = [0] * ln
-            for j in range(ln):
-                block[j] = (arr[idx+1][j+1] if (rowColumn == True) else arr[j+1][idx+1])
-            if correct(block,values,ln) == False:
-                return False
-            else:
-                completedRowCol[i] = True
+        ln = n if (rowColumn == False) else m
+        block = [0] * ln
+        for j in range(ln):
+            block[j] = (arr[idx+1][j+1] if (rowColumn == True) else arr[j+1][idx+1])
+        if correct(block,values,ln) == False:
+            return False
+        else:
+            completedRowCol[i] = True
     return True
 
 # rekurencyjna funkcja pomocnicza dla brute force
-def bruteRec(allCorect, block, iter,valiter ,values,ln,valLen,limits):
+def findAllCorectRec(allCorect, block, iter,valiter ,values,ln,valLen,limits):
     if valiter >= valLen:
         if correct(block,values,ln):
             allCorect.append(deepcopy(block))
@@ -68,15 +69,24 @@ def bruteRec(allCorect, block, iter,valiter ,values,ln,valLen,limits):
             if (iter+values[valiter]<=ln) and all([block[iter+i]!=-1 for i in range(values[valiter])]):
                 for i in range(values[valiter]):
                     blockCopy[iter+i]=1
-                bruteRec(allCorect, blockCopy, iter+values[valiter]+1,valiter+1 ,values,ln,valLen,limits)
+                findAllCorectRec(allCorect, blockCopy, iter+values[valiter]+1,valiter+1 ,values,ln,valLen,limits)
         blockCopy[iter] = (-1 if block[iter]==0 else block[iter])
         iter += 1
 
+def findAllCorect(block,values,ln):
+    valLen = len(values)
+    limits = [0 for v in values]
+    limits[0] = ln-(sum(values)+valLen-2)
+    for i in range(1,valLen):
+        limits[i] = limits[i-1]+values[i-1]+1
+    result = []
+    findAllCorectRec(result,block,0,0,values,ln,valLen,limits)
+    return result
+
 # sprawdzam wszystkie mozliwe ustawienia z uwzglednieniem blokad i pomalowanych pixeli, jesli jakis pixel ma
 # taka sama wartosc dla wszystkich ustawien - taka wartosc mu przypisuje (blokada/pomalowanie)
-def bruteForce(block,values,ln,valLen,limits):
-    result = []
-    bruteRec(result,block,0,0,values,ln,valLen,limits)
+def deduction(block,values,ln):
+    result = findAllCorect(block,values,ln)
     sameForAllBlock = [0 for i in range(ln)]
     for r in result:
         for i in range(ln):
@@ -86,16 +96,17 @@ def bruteForce(block,values,ln,valLen,limits):
                 if sameForAllBlock[i]!=(r[i] if r[i]!=0 else -1):
                     sameForAllBlock[i] = -2
     state = 0
-    for i in range(ln):
-        if sameForAllBlock[i]!=-2 and block[i]==0:
-            block[i]=sameForAllBlock[i]
-            state = 1
     if len(result)==0:
         state = 2
+    else:
+        for i in range(ln):
+            if sameForAllBlock[i]!=-2 and block[i]==0:
+                block[i]=sameForAllBlock[i]
+                state = 1
     return state
 
 # na wszystkich wierszach i kolumnach puszcza funkcje powyzej
-def tryToSolve():
+def tryToDeduce():
     state = 0
     for i in range(n+m):
         if completedRowCol[i] == True:
@@ -114,15 +125,8 @@ def tryToSolve():
         for i in range(ln):
             block[i] = (arr[idx+1][i] if (rowColumn == True) else arr[i][idx+1])
 
-        valLen = len(values)
-
-        limits = [0 for v in values]
-        limits[0] = ln-(sum(values)+valLen-2)
-        for i in range(1,valLen):
-            limits[i] = limits[i-1]+values[i-1]+1
-
         # tutaj operacje na block
-        blockState = bruteForce(block,values,ln,valLen,limits)
+        blockState = deduction(block,values,ln)
         if blockState > state:
             state = blockState
         # 0 - nie nastapily zadne zmiany 
@@ -143,44 +147,68 @@ def tryToSolve():
             columns[idx] = values
     return state
 
-def randomChange():
-    global arr
-    i = randrange(n)
-    j = randrange(m)
-    while arr[i][j]!=0:
-        i = randrange(n)
-        j = randrange(m)
-    arr[i][j]=1
+def generateCompleted(idx,rowColumn,ln):
+    values = (rows[idx] if rowColumn==True else columns[idx])
 
-def guessingTryToSolve():
+    ln = n if (rowColumn == False) else m
+    ln+=2
+    block = [0] * (ln)
+    for i in range(ln):
+        block[i] = (arr[idx+1][i] if (rowColumn == True) else arr[i][idx+1])
+    return findAllCorect(block,values,ln)
+
+progressCounter = 0
+def tryToSolve():
     global arr
-    que = deque()#przechowuje (kopie arr, counter)
-    # kiedy martwy stan przywracam poprzedni zapisany i zmniejszam counter
-    # kiedy counter == 0, zdejmuje ten stan ze stosu i przywracam poprzedni 
-    que.append((deepcopy(arr),-1))#zapisuje stan poczatkowy, zeby nigdy nie probowac wczytac z pustej kolejki
+    global completedRowCol
+    global progressCounter
     while not solved():
+        # print(progressCounter,end='\r')
+        progressCounter+=1
         printArr()
         print()
-        state = tryToSolve()
-        if state == 0:#brak zmian, trzeba zapisac stan arr w que i pomalowac losowy pixel
-            que.append((deepcopy(arr),5))
-            randomChange()
-        if state == 2:#martwy stan, trzeba przywrocic poprzednie arr z que
-            while True:
-                if que[-1][1] > 0:
-                    (ar,c) = que.pop()
-                    c-=1
-                    if c > 0:
-                        que.append((ar,c))
+        state = tryToDeduce()
+        if state == 0:#brak zmian, trzeba zapisac stan arr 
+            iterTotal = 0
+            while completedRowCol[totalLengthValues[iterTotal][1]] == True:
+                iterTotal+=1
+                if iterTotal == n+m:
+                    return False
+            idx = totalLengthValues[iterTotal][1]
+            completedRowCol[idx] = True
+            rowColumn = True #True - row, False - column
+            if idx >= n:
+                idx-=n
+                rowColumn = False
+            ln = n if (rowColumn == False) else m
+            ln+=2
+            arrCopy = deepcopy(arr)
+            resultBlock = generateCompleted(idx,rowColumn,ln)
+            for res in resultBlock:
+                for i in range(ln):
+                    if rowColumn:
+                        if arr[idx+1][i] == 0:
+                            arr[idx+1][i] = (res[i] if res[i]!=0 else -1)
                     else:
-                        break
-            arr = deepcopy(que[-1][0])
+                        if arr[i][idx+1] == 0:
+                            arr[i][idx+1] = (res[i] if res[i]!=0 else -1)
+                if not tryToSolve():
+                    arr = deepcopy(arrCopy)
+                else:
+                    return True
+            completedRowCol[(idx if rowColumn else idx+n)] = False
+            return False
+        if state == 2:#martwy stan, trzeba przywrocic poprzednie arr
+            return False
+    return True
 
 # przygotowuje plansze i stara sie ja rozwiazac
 def nonogram():
     #przygotowanie tablicy rozmiaru n x m
     global arr
     global completedRowCol
+    global totalLengthValues
+
     arr = [[0 for j in range(m+2)] for i in range(n+2)]
     completedRowCol = [False for i in range(n+m)]
 
@@ -192,7 +220,18 @@ def nonogram():
         arr[0][j] = -1
         arr[n+1][j] = -1
 
-    guessingTryToSolve()
+    for i in range(n+m):
+        idx = i
+        rowColumn = True #True - row, False - column
+        if idx >= n:
+            idx-=n
+            rowColumn = False
+        values = (rows[idx] if rowColumn==True else columns[idx])
+        totalLengthValues.append(((sum(values)+len(values)-1)/(n if rowColumn else m),i))
+    totalLengthValues.sort(reverse=True)
+    # print(totalLengthValues)
+
+    tryToSolve()
 
     printArr()
     return
