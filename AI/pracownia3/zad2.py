@@ -34,13 +34,12 @@ def correct(block,values,ln):
             onesInRow+=1
     return True
 
-# zwraca bool czy calosc rozwiazana czy nie
+# zwraca bool czy calosc rozwiazana czy nie + update completedRowCol
 def solved():
     global rows
     global columns
     #pierwsze n wartosci to indeksy rows, kolejne m to indeksy columns
     for i in range(n+m):
-        # if completedRowCol[i] == False:
         idx = i
         rowColumn = True #True - row, False - column
         if idx >= n:
@@ -49,18 +48,14 @@ def solved():
         values = (rows[idx] if rowColumn==True else columns[idx])
 
         ln = n if (rowColumn == False) else m
+        ln+=2
         block = [0] * ln
         for j in range(ln):
-            block[j] = (arr[idx+1][j+1] if (rowColumn == True) else arr[j+1][idx+1])
-        if correct(block,values,ln) == False:
-            return False
-        else:
-            # print("now setting block i as completed",i,block,values)
-            # print(rows)
-            # print(columns)
-            completedRowCol[i] = True
-    return True
+            block[j] = (arr[idx+1][j] if (rowColumn == True) else arr[j][idx+1])
+        completedRowCol[i] = correct(block,values,ln)
+    return all(completedRowCol)
 
+# zwraca bool czy dany block z allCorrectForAll[i] jest dalej poprawny w stosunku do aktualnej zawartosci arr
 def isStillCorrect(block,i):
     idx = i
     rowColumn = True #True - row, False - column
@@ -76,8 +71,9 @@ def isStillCorrect(block,i):
             return False
     return True
 
-# sprawdzam wszystkie mozliwe ustawienia z uwzglednieniem blokad i pomalowanych pixeli, jesli jakis pixel ma
-# taka sama wartosc dla wszystkich ustawien - taka wartosc mu przypisuje (blokada/pomalowanie)
+# sprawdzam wszystkie mozliwe i StillCorrect ustawienia
+# jesli jakis pixel ma taka sama wartosc dla wszystkich ustawien, 
+# to taka wartosc mu przypisuje (blokada/pomalowanie)
 def deduction(block,i,ln):
     result = [a for a in allCorrectForAll[i] if isStillCorrect(a,i)]
     sameForAllBlock = [0 for i in range(ln)]
@@ -98,12 +94,10 @@ def deduction(block,i,ln):
                 state = 1
     return state
 
-# na wszystkich wierszach i kolumnach puszcza funkcje powyzej
+# na wszystkich wierszach i kolumnach puszcza funkcje deduction
 def tryToDeduce():
     state = 0
     for i in range(n+m):
-        if completedRowCol[i] == True:
-            continue
         idx = i
         
         rowColumn = True #True - row, False - column
@@ -116,6 +110,15 @@ def tryToDeduce():
         block = [0] * (ln)
         for j in range(ln):
             block[j] = (arr[idx+1][j] if (rowColumn == True) else arr[j][idx+1])
+
+        #jezeli jest zakonczony i poprawny, continue
+        #jezeli jest zakonczony i bledny, zwroc stan martwy - nalezy odtworzyc arr
+        #jezeli nie zakonczony to sprobuj dedukcji
+        if completedRowCol[i] == True:
+            if correct(block,(rows[idx] if rowColumn==True else columns[idx]),ln) == False:
+                return 2
+            else:
+                continue
 
         # tutaj operacje na block
         blockState = deduction(block,i,ln)
@@ -136,25 +139,6 @@ def tryToDeduce():
                 arr[i][idx+1] = block[i]
     return state
 
-def isCompletedWrong():
-    for i in range(n+m):
-        # if completedRowCol[i] == False:
-        idx = i
-        rowColumn = True #True - row, False - column
-        if idx >= n:
-            idx-=n
-            rowColumn = False
-        values = (rows[idx] if rowColumn==True else columns[idx])
-
-        ln = n if (rowColumn == False) else m
-        block = [0] * ln
-        for j in range(ln):
-            block[j] = (arr[idx+1][j+1] if (rowColumn == True) else arr[j+1][idx+1])
-        if (correct(block,values,ln) == False) and (completedRowCol[i] == True):
-            # print("completed is wrong for i,idx,block,values",i,idx,block,values)
-            return True
-    return False
-
 progressCounter = 0
 def tryToSolve():
     global arr
@@ -163,11 +147,8 @@ def tryToSolve():
     global betterOrder
     global allCorrectForAll
 
-    solved()#oznacza completed
-    if isCompletedWrong():
-        return False
-
     while not solved():
+        #progressCounter sluzy tylko do obserwacji postepu pracy programu
         print(progressCounter,end='\r')
         progressCounter+=1
         # printArr()
@@ -192,14 +173,12 @@ def tryToSolve():
             for res in resultBlock:
                 for i in range(ln):
                     if rowColumn:
-                        if arr[idx+1][i] == 0:
-                            arr[idx+1][i] = (res[i] if res[i]!=0 else -1)
+                        arr[idx+1][i] = res[i]
                     else:
-                        if arr[i][idx+1] == 0:
-                            arr[i][idx+1] = (res[i] if res[i]!=0 else -1)
+                        arr[i][idx+1] = res[i]
                 if not tryToSolve():
-                    completedRowCol = [False for i in range(n+m)]#reset wszystkich tak na wszelki wypadek
                     arr = deepcopy(arrCopy)
+                    solved()#update completedRowCol
                 else:
                     return True
             completedRowCol[(idx if rowColumn else idx+n)] = False
@@ -234,7 +213,6 @@ def generateCorect(idx,rowColumn):
     result = []
     findAllCorect(result,block,1,0,values,ln,valLen)
     return result
-
 
 def preprocessing():
     #przygotowanie tablicy rozmiaru n x m
