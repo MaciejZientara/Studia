@@ -1,5 +1,4 @@
 from copy import deepcopy
-from random import randint
 
 n = 0
 m = 0
@@ -10,8 +9,10 @@ columns = []
 completedRowCol = []
 # 3 stany: -1 (blocked, tutaj nie mozna pokolorowac), 0 (empty, mozna pomalowac), 1 (filled, pokolorowane)
 arr = []
-# suma dlugosci wszystkich segmentow + ilosc segmentow-1
-totalLengthValues = []
+# lista list wszystkich poprawnych ustawien blokow (3 zagniezdzone listy wliczajac zapisane block - tez listy)
+allCorrectForAll = []
+# lista numerow kolumn/wierszy dajaca lepsze wyniki losowego uzupelniania
+betterOrder = []
 
 # zwraca bool czy dany rzad/kolumna rozwiazana
 def correct(block,values,ln):
@@ -35,6 +36,8 @@ def correct(block,values,ln):
 
 # zwraca bool czy calosc rozwiazana czy nie
 def solved():
+    global rows
+    global columns
     #pierwsze n wartosci to indeksy rows, kolejne m to indeksy columns
     for i in range(n+m):
         # if completedRowCol[i] == False:
@@ -52,41 +55,31 @@ def solved():
         if correct(block,values,ln) == False:
             return False
         else:
+            # print("now setting block i as completed",i,block,values)
+            # print(rows)
+            # print(columns)
             completedRowCol[i] = True
     return True
 
-# rekurencyjna funkcja pomocnicza dla brute force
-def findAllCorectRec(allCorect, block, iter,valiter ,values,ln,valLen,limits):
-    if valiter >= valLen:
-        if correct(block,values,ln):
-            allCorect.append(deepcopy(block))
-        return
-    if iter >= limits[valiter]:
-        return
-    blockCopy = deepcopy(block)
-    while iter < limits[valiter]:
-        if blockCopy[iter]!=-1:
-            if (iter+values[valiter]<=ln) and all([block[iter+i]!=-1 for i in range(values[valiter])]):
-                for i in range(values[valiter]):
-                    blockCopy[iter+i]=1
-                findAllCorectRec(allCorect, blockCopy, iter+values[valiter]+1,valiter+1 ,values,ln,valLen,limits)
-        blockCopy[iter] = (-1 if block[iter]==0 else block[iter])
-        iter += 1
-
-def findAllCorect(block,values,ln):
-    valLen = len(values)
-    limits = [0 for v in values]
-    limits[0] = ln-(sum(values)+valLen-2)
-    for i in range(1,valLen):
-        limits[i] = limits[i-1]+values[i-1]+1
-    result = []
-    findAllCorectRec(result,block,0,0,values,ln,valLen,limits)
-    return result
+def isStillCorrect(block,i):
+    idx = i
+    rowColumn = True #True - row, False - column
+    if idx >= n:
+        idx-=n
+        rowColumn = False
+    ln = n if (rowColumn == False) else m
+    ln+=2
+    for i in range(ln):
+        B = block[i]
+        A = (arr[idx+1][i] if rowColumn else arr[i][idx+1])
+        if (A!=0) and (A!=B):
+            return False
+    return True
 
 # sprawdzam wszystkie mozliwe ustawienia z uwzglednieniem blokad i pomalowanych pixeli, jesli jakis pixel ma
 # taka sama wartosc dla wszystkich ustawien - taka wartosc mu przypisuje (blokada/pomalowanie)
-def deduction(block,values,ln):
-    result = findAllCorect(block,values,ln)
+def deduction(block,i,ln):
+    result = [a for a in allCorrectForAll[i] if isStillCorrect(a,i)]
     sameForAllBlock = [0 for i in range(ln)]
     for r in result:
         for i in range(ln):
@@ -117,16 +110,16 @@ def tryToDeduce():
         if idx >= n:
             idx-=n
             rowColumn = False
-        values = (rows[idx] if rowColumn==True else columns[idx])
 
         ln = n if (rowColumn == False) else m
         ln+=2
         block = [0] * (ln)
-        for i in range(ln):
-            block[i] = (arr[idx+1][i] if (rowColumn == True) else arr[i][idx+1])
+        for j in range(ln):
+            block[j] = (arr[idx+1][j] if (rowColumn == True) else arr[j][idx+1])
 
         # tutaj operacje na block
-        blockState = deduction(block,values,ln)
+        blockState = deduction(block,i,ln)
+        # print("block",block)
         if blockState > state:
             state = blockState
         # 0 - nie nastapily zadne zmiany 
@@ -141,49 +134,61 @@ def tryToDeduce():
                 arr[idx+1][i] = block[i]
             else: 
                 arr[i][idx+1] = block[i]
-        if rowColumn==True:
-            rows[idx] = values
-        else:
-            columns[idx] = values
     return state
 
-def generateCompleted(idx,rowColumn,ln):
-    values = (rows[idx] if rowColumn==True else columns[idx])
+def isCompletedWrong():
+    for i in range(n+m):
+        # if completedRowCol[i] == False:
+        idx = i
+        rowColumn = True #True - row, False - column
+        if idx >= n:
+            idx-=n
+            rowColumn = False
+        values = (rows[idx] if rowColumn==True else columns[idx])
 
-    ln = n if (rowColumn == False) else m
-    ln+=2
-    block = [0] * (ln)
-    for i in range(ln):
-        block[i] = (arr[idx+1][i] if (rowColumn == True) else arr[i][idx+1])
-    return findAllCorect(block,values,ln)
+        ln = n if (rowColumn == False) else m
+        block = [0] * ln
+        for j in range(ln):
+            block[j] = (arr[idx+1][j+1] if (rowColumn == True) else arr[j+1][idx+1])
+        if (correct(block,values,ln) == False) and (completedRowCol[i] == True):
+            # print("completed is wrong for i,idx,block,values",i,idx,block,values)
+            return True
+    return False
 
 progressCounter = 0
 def tryToSolve():
     global arr
     global completedRowCol
     global progressCounter
+    global betterOrder
+    global allCorrectForAll
+
+    solved()#oznacza completed
+    if isCompletedWrong():
+        return False
+
     while not solved():
-        # print(progressCounter,end='\r')
+        print(progressCounter,end='\r')
         progressCounter+=1
-        printArr()
-        print()
+        # printArr()
+        # print()
         state = tryToDeduce()
         if state == 0:#brak zmian, trzeba zapisac stan arr 
-            iterTotal = 0
-            while completedRowCol[totalLengthValues[iterTotal][1]] == True:
-                iterTotal+=1
-                if iterTotal == n+m:
+            iter = 0
+            while completedRowCol[betterOrder[iter]] == True:
+                iter+=1
+                if iter==(n+m):
                     return False
-            idx = totalLengthValues[iterTotal][1]
+            idx = betterOrder[iter]
+            resultBlock = [a for a in allCorrectForAll[idx] if isStillCorrect(a,idx)]
             completedRowCol[idx] = True
             rowColumn = True #True - row, False - column
             if idx >= n:
                 idx-=n
                 rowColumn = False
-            ln = n if (rowColumn == False) else m
+            ln = n if (rowColumn == False) else m # dlugosc wiersza = ilosc kolumn
             ln+=2
             arrCopy = deepcopy(arr)
-            resultBlock = generateCompleted(idx,rowColumn,ln)
             for res in resultBlock:
                 for i in range(ln):
                     if rowColumn:
@@ -193,6 +198,7 @@ def tryToSolve():
                         if arr[i][idx+1] == 0:
                             arr[i][idx+1] = (res[i] if res[i]!=0 else -1)
                 if not tryToSolve():
+                    completedRowCol = [False for i in range(n+m)]#reset wszystkich tak na wszelki wypadek
                     arr = deepcopy(arrCopy)
                 else:
                     return True
@@ -202,13 +208,47 @@ def tryToSolve():
             return False
     return True
 
-# przygotowuje plansze i stara sie ja rozwiazac
-def nonogram():
+# rekurencyjna funkcja pomocnicza dla generateCorect
+def findAllCorect(allCorect, block, iter,valiter ,values,ln,valLen):
+    if valiter >= valLen:
+        if correct(block,values,ln):
+            allCorect.append(deepcopy(block))
+        return
+    limit = ln-values[valiter]#tego juz nie rozpatrywac! 
+    if iter >= limit:
+        return
+    while iter < limit:
+        for i in range(values[valiter]):
+            block[iter+i] = 1
+        findAllCorect(allCorect, block, iter+values[valiter]+1,valiter+1 ,values,ln,valLen)
+        for i in range(values[valiter]):
+            block[iter+i] = -1
+        iter+=1
+
+def generateCorect(idx,rowColumn):
+    values = (rows[idx] if rowColumn==True else columns[idx])
+    ln = n if (rowColumn == False) else m
+    ln+=2
+    block = [-1] * (ln)
+    valLen = len(values)
+    result = []
+    findAllCorect(result,block,1,0,values,ln,valLen)
+    return result
+
+
+def preprocessing():
     #przygotowanie tablicy rozmiaru n x m
     global arr
     global completedRowCol
-    global totalLengthValues
+    global allCorrectForAll
+    global betterOrder
 
+    for i in range(min(n,m)):
+        betterOrder.append(i)
+        betterOrder.append(i+n)
+    for i in range(min(n,m),max(n,m)):
+        betterOrder.append(i)
+    
     arr = [[0 for j in range(m+2)] for i in range(n+2)]
     completedRowCol = [False for i in range(n+m)]
 
@@ -219,20 +259,19 @@ def nonogram():
     for j in range(m+2):
         arr[0][j] = -1
         arr[n+1][j] = -1
-
+    
     for i in range(n+m):
         idx = i
         rowColumn = True #True - row, False - column
         if idx >= n:
             idx-=n
             rowColumn = False
-        values = (rows[idx] if rowColumn==True else columns[idx])
-        totalLengthValues.append(((sum(values)+len(values)-1)/(n if rowColumn else m),i))
-    totalLengthValues.sort(reverse=True)
-    # print(totalLengthValues)
+        allCorrectForAll.append(generateCorect(idx,rowColumn))
 
+# przygotowuje plansze i stara sie ja rozwiazac
+def nonogram():
+    preprocessing()
     tryToSolve()
-
     printArr()
     return
 
