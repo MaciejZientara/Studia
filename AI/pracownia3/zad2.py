@@ -76,8 +76,7 @@ def findAllStillCorrect(idx):#                                                  
     return [a for a in allCorrectForAll[idx] if isStillCorrect(a,idx)]
 
 # sprawdzam wszystkie mozliwe i StillCorrect ustawienia
-# jesli jakis pixel ma taka sama wartosc dla wszystkich ustawien, 
-# to taka wartosc mu przypisuje (blokada/pomalowanie)
+# jesli jakis pixel ma taka sama wartosc dla wszystkich ustawien, to taka wartosc mu przypisuje (blokada/pomalowanie)
 def deduction(block,i,ln):
     result = findAllStillCorrect(i)
     sameForAllBlock = [0 for i in range(ln)]

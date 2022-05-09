@@ -1,0 +1,24 @@
+ra = 1 oraz rb = 1
+jaka wartosc e po 1 cyklu zegara?
+
+always_latch if (clk) begin
+	rb = ra - 1;
+	if (rb == 0) e = 1;
+	else e = 0;
+end
+
+rb od razu stanie sie ra-1=0 wiec
+w if otrzymamy prawde: e=1
+
+pomimo wykonania funkcji przy obu zboczach zegara,
+to wartosc ra nigdy sie nie zmienia, wiec wynik operacji zawsze taki sam???
+
+always_ff @(posedge clk) begin
+	rb <= ra - 1;
+	if (rb == 0) e <= 1;
+	else e <= 0;
+end
+
+do rb zostanie po chwili przypisane ra-1=0 ale
+w momencie sprawdzenia if rb nie zostalo jeszcze zmienione
+co oznacza, ze rb=1 != 0, czyli otrzymamy e <= 0
