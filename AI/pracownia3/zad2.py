@@ -71,11 +71,15 @@ def isStillCorrect(block,i):
             return False
     return True
 
+# zwraca liste wszystkich dajej poprawnych blokow z allCorrectForAll[i]
+def findAllStillCorrect(idx):#                                                    TODO binarne przeszukiwanie, zamiast liniowego
+    return [a for a in allCorrectForAll[idx] if isStillCorrect(a,idx)]
+
 # sprawdzam wszystkie mozliwe i StillCorrect ustawienia
 # jesli jakis pixel ma taka sama wartosc dla wszystkich ustawien, 
 # to taka wartosc mu przypisuje (blokada/pomalowanie)
 def deduction(block,i,ln):
-    result = [a for a in allCorrectForAll[i] if isStillCorrect(a,i)]
+    result = findAllStillCorrect(i)
     sameForAllBlock = [0 for i in range(ln)]
     for r in result:
         for i in range(ln):
@@ -161,7 +165,7 @@ def tryToSolve():
                 if iter==(n+m):
                     return False
             idx = betterOrder[iter]
-            resultBlock = [a for a in allCorrectForAll[idx] if isStillCorrect(a,idx)]
+            resultBlock = findAllStillCorrect(idx)
             completedRowCol[idx] = True
             rowColumn = True #True - row, False - column
             if idx >= n:
