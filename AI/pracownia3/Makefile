@@ -6,6 +6,6 @@ z1:
 z2:
 	python3 validator.py zad2 python3 zad2.py 
 z4:
-	python3 validator.py zad4 python3 zad4.py 
+	python3 validator.py --stdio zad4 python3 sudoku.py 
 z5:
 	python3 validator.py zad5 python3 zad5.py 
