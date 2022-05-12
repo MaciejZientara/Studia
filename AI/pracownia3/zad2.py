@@ -224,11 +224,11 @@ def preprocessing():
     global allCorrectForAll
     global betterOrder
 
-    for i in range(min(n,m)):
-        betterOrder.append(i)
-        betterOrder.append(i+n)
-    for i in range(min(n,m),max(n,m)):
-        betterOrder.append(i)
+    # for i in range(min(n,m)):
+    #     betterOrder.append(i)
+    #     betterOrder.append(i+n)
+    # for i in range(min(n,m),max(n,m)):
+    #     betterOrder.append(i)
     
     arr = [[0 for j in range(m+2)] for i in range(n+2)]
     completedRowCol = [False for i in range(n+m)]
@@ -248,6 +248,11 @@ def preprocessing():
             idx-=n
             rowColumn = False
         allCorrectForAll.append(generateCorect(idx,rowColumn))
+
+    orderHelper = [(len(allCorrectForAll[i]),i) for i in range(n+m)]
+    for o in sorted(orderHelper):
+        betterOrder.append(o[1])
+
 
 # przygotowuje plansze i stara sie ja rozwiazac
 def nonogram():
