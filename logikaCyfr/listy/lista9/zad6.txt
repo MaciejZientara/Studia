@@ -1,0 +1,14 @@
+M = ({(00,01,10,11)},B,B,delta,id,00)
+
+funkcja wyjscia identycznosc?
+
+stany to AB, A oznacza parzystosc 0,
+B oznacza parzystosc 1
+
+!A oznacza negacje wartosci A
+!1 = 0, !0 = 1
+
+delta(AB,a):
+!AB gdy a=0
+A!B gdy a=1
+

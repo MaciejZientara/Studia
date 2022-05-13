@@ -1,0 +1,8 @@
+M = ({0,1,2,3},B,B,delta,gamma,0)
+
+delta(q,a):
+q gdy a=0
+(q+1)%4 wpp
+
+gamma(q):
+q<2

@@ -1,0 +1,8 @@
+mam 2 rejestry przechowujace ostateni 2 bity + bit wejsciowy a
+
+funkcja wyjscia to xor 2 rejestrow i a
+
+jesli rejestry to A i B to funkcja przejscia to:
+B = A
+A = a
+a naturalnie sie zmienia

@@ -1,0 +1,9 @@
+stan poczatkowy 0000
+
+funkcja przejscia miedzy stanami:
+przejscie ze stanu q, dla przejscia a = 0/1
+q[3:1] + a
+
+funkcja wyjscia:
+q == 1001 or q == 1111
+
