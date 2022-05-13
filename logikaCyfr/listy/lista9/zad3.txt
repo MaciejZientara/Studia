@@ -1,0 +1,11 @@
+4 rejestry: 0 - !=, 1 - ==
+
+logic [3:0] q;
+out = &q;
+
+stan poczatkowy q = 0
+
+<=> to to samo co !xor
+
+funkcja przejscia dla wejscia a,b:
+q = q<<1 + (a<=>b)
