@@ -11,10 +11,10 @@ z4:
 	rm -f *.txt
 	touch zad_input.txt
 	python3 validator.py --stdio zad4 python3 sudoku.py 
-	rm -f *.txt
+	rm -f *.txt *.pl a.out
 z5:
 	rm -f *.txt
 	touch zad_input.txt
-	python3 validator.py --stdio zad5 python3 storms.py 
+	python3 validator.py zad5 python3 storms.py 
 	rm -f *.txt *.pl a.out
 
