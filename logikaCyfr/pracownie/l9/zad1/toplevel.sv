@@ -18,10 +18,10 @@ module circuit(output bell, light, heat,
   always_ff @(posedge clk, negedge nrst) begin
     if (!nrst) q <= 5'b00001;
     else begin
-      q[0] <= !door & !start & (q[0] | q[4]);
-      q[1] <= !door & !finish & !q[3] & (start | q[2] | q[1]);
+      q[0] <= !door & (q[4] | (!start & q[0]));
+      q[1] <= !door & ((start & q[0]) | q[2] | (!finish & q[1]));
       q[2] <= door & (q[1] | q[2]);
-      q[3] <= !door & (finish & q[1] | q[3]);
+      q[3] <= !door & ((finish & q[1]) | q[3]);
       q[4] <= door & (q[0] | q[3] | q[4]);
     end
   end
