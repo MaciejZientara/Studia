@@ -1,0 +1,28 @@
+zad4:
+
+(automaton)
+https://www.swi-prolog.org/man/clpfd.html 
+
+https://gist.github.com/larsmans/1146705/8ba25a66402adad16a89a09eeb68bf83f8b6f01a
+
+w prolog tak jak w racket listy to pary (val,next_pair)
+
+nie ma interacji, jest rekurecncja [current, rest_of_the_list]
+
+arcs i automaton to tworzenie 'słów' na podstawie zadanych zasad
+mamy slowo poczatkowe np S [source]
+mamy terminatory [sink]
+mamy stale np 0/1
+i reguly tworzenia np
+
+S -> terminator
+S -> SS
+S -> 1
+S -> 0
+
+wyprodukuje wszystkie liczby binarne dowolnej dlugosci
+
+w arcs mozemy miec tez iteratory czy stale (lub tutaj listy)
+[K|Ks] oznacza dlugosc segmentu i pozostale segmenty
+tak dlugo jak K > 0 wypelniam 1, kiedy dojde do 0 wypelniam 0 (dowolna ilosc przerw)
+a potem znowu wypelniam segmnet - czyli kojelne K z listy

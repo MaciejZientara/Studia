@@ -1,0 +1,2 @@
+default:
+	swipl nonogram.pl
