@@ -15,17 +15,25 @@ endmodule
 
 /*
 stany:
-BEGIN - !e, !q
-E - e, !q
-Q - e, q
+!E!Q - !e, !q
+E!Q - e, !q
+EQ - e, q
+!EQ - !e, q
 
 przejscia przy posedge clk
-BEGIN -(a)-> E
-BEGIN -(b)-> E
+Start = !E!Q
 
-E -(!a!b)-> BEGIN
-E -(c)-> Q
+!E!Q -(a+b)-> E!Q
 
-Q -(!a!b)-> BEGIN
-Q -(!ce)-> E
+E!Q -((a+b)c)-> EQ
+E!Q -(!(a+b)c)-> !EQ
+E!Q -(!(a+b)!c)-> !E!Q
+
+EQ -((a+b)!c)-> E!Q
+EQ -(!(a+b)c)-> !EQ
+
+!EQ -(!(a+b))-> !E!Q
+!EQ -(a+b)-> E!Q
+
+nie oznaczone, ale sa oczywiscie tez petelki na kazdym ze stanow
 */
