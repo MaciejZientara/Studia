@@ -1,0 +1,14 @@
+zad2:
+a)
+Wiemy co sami posiadamy na ręce i jakie karty były już zagrane - tego przeciwnik nie może mieć na ręce
+dostępne stany to wszystkie poza zakazanymi
+
+b)
+np. licytacja w brydżu: przed grą w pewien sposób przekazujemy swojemu parterowi informacje co mamy na ręce lub co nam pasuje
+ta informacja jest widoczna dla przeciwników i pozwala na podjecie decyzji o strategii rozgrywki jeszcze przed sama gra
+gdyby nie uwzglednic tych deklaracji w prawdopodobieństwie to zagrania zawsze były by skazane na porażkę
+
+c)
+nie analizujemy ruchów przeciwnika
+w brydżu zła rozgrywka może spowodować stratę inicjatywy, przez co przeciwnicy będą zaczynać tury
++ nie uwzgledniamy, ze ludzie moga dokonac nieoptymalnych wyborow (bledy dla algorytmu)
