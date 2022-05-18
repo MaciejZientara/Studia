@@ -1,3 +1,30 @@
+zad3:
+zawsze daje najwięcej kart tego samego typu ile mogę (moge poza nimi dac tez inne kiedy blefuje)!
+
+1. szczery, zawsze pass: nie ryzykujemy wzięcia całej wyłożonej do tej pory talii
+
+#obserwacja: nie wiemy dokładnie co jest na stole! 
+#slyszymy tylko deklaracje, ale nie mamy pewnosci czy na pewno takie karty sie tam znjaduja!
+#dopiero przy sprawdzaniu dowiadujemy się jakie tak naprawdę były ostatnio położone karty - ale tylko ostatnio położone, nie wszystkie do tej pory!
+
+#czy jest mozliwe wyliczanie prawdopodobieństwa jeżeli wiem tylko co mam na ręce i co potencjalnie może być na stole?
+
+2. korzystać z zapamiętywania co teoretycznie jest na stole i obliczać prawdopodobieństwo
+
+jeśli ktoś kładzie I kart typu X a my mamy na ręce 4-(I-1) kart X na ręce (np kladzie 3 a my mamy 2) to na pewno blefuje
+
+warto pozbywać sie pojedynczych kart blefując - zmniejsza ilość tur potrzebnych do pozbycia się wszystkich kart
+
+im mniejsze blefy tym większa szansa, że przejdą niezauważone!
+
+jeśli już położono karty typu X na stole to nawet mała ilość kart położona może być podejżona - należy zwiększać prawdopodobieństwo porażki,
+co za tym idzie mniej blefować dając karty typu X
+w szczególności: jesli teoretycznie położono już 4 lub więcej kart typu X a ma się na ręce kartę typu X to na pewno nie można blefować kładąc ją:
+zostanie to natychmiast wykryte
+
+ponieważ zawsze trzeba dać jakieś karty należy zawsze kłaść te które można (max ilość) i wyliczyć do tego szanse na dodatkowy blef,
+oczywiście kiedy mamy dużo (3/4) karty typu X nie ma sensu dodatkowo blefować - za duża szansa wykrycia
+
 zad2:
 a)
 Wiemy co sami posiadamy na ręce i jakie karty były już zagrane - tego przeciwnik nie może mieć na ręce
