@@ -1,0 +1,7 @@
+potrzebujemy 4 bloczkow 4x4
+najpierw skladamy bloki 4x8 (4 bajty)
+a potem 8x8
+w ten sposob mamy zapewnione dobre adresowanie (odpowiednich bajtow i bitow)
+
+adresy bajtow i bitow mozna zrobic tak:
+2 ostatnie bity wybieraja odpowieni rzad/kolumne w samym bloczku 4x4, a pierwszy bit (najbardziej znaczacy) wybiera z ktorego bloczku 4x4 pobieramy dane

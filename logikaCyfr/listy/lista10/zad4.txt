@@ -1,0 +1,17 @@
+a)
+100 * 8 bitow
+100 liczb (0-99) 2 cyfrowych (1 cyfra na 4 bity)
+
+b)
+pierwszy argument - numer wiersza
+drugi argument - numer kolumny
+w ten sposob mamy tablice 2^4 x 2^4 (16 x 16)
+gdzie w kazdym polu rozmiaru 8 bitow (bo 2^4 * 2^4 = 2^8)
+jest wynik mnozenia dwoch argumentow
+
+c)
+zakladajac, ze liczby sa w systemie U2 to analogicznie do b)
+
+d)
+10 * 8 bitow
+w kazdej z 10 (0-9) komorek pamieci jest 7 bitow dla diod (lub 8 jesli wliczac kropke) i 1 bit enable?

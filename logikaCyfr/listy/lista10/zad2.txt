@@ -1,0 +1,18 @@
+16K bitow to 2^14 roznych bitow
+
+opcja pierwsza:
+1 wiersz dlugosci 2^14
+dekoder 0 input (tylko 1 wiersz)
+multiplekser 14 input
+suma: 2^14+1
+
+
+dekoder ma I wejsc
+multiplekser ma J wejsc
+cel I oraz J minimalne ale I+J=14
+
+kwadrat: I=J=7
+
+dekoder wybiera jeden z 2^7 wierszy,
+multiplekser wybiera jedna z 2^7 kolumn
+suma: 2^7 + 2^7 = 2^8

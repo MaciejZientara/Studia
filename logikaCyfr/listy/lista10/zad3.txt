@@ -1,0 +1,18 @@
+32K x 8 pozwala zapamietac:
+32K bajtow lub 256K bitow
+
+32K roznych adresow mozna zapisac 15 bitami!
+256K roznych adresow mozna zapisac 18 bitami!
+
+zawsze bedziemy potrzebowac 8 takich blokow, pytanie jak je ustawimy
+
+mozna ustawic 8 tych pamieci w 3D powodujac, ze bajt jest zamieszczony
+we wszystkich blokach po jednym bicie
+bit K znajduje sie na pozycji [I][J] w K-tym bloku
+wtedy potrzebujemy 23 bitow na adres (I na 15 bitow, J na 8 bitow)
+
+chyba lepiej zrobic po prostu, ze mamy po 32K bajtow
+
+mozna po 32K bajty
+wtedy potrzebujemy tylko 3 'dodatkowe' bity na wybranie modulu
+plus x bitow na wybranie bajtu z samego modulu
