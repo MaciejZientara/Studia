@@ -2,10 +2,9 @@ mod complex;
 mod picture;
 
 fn main() {
-    println!("Hello, world!");
     let func = |z:&complex::Complex| -> complex::Complex 
     {z.pow(5)-z.pow(3)+complex::Complex::new(0.15,0.35)};
-    let pic = picture::Picture::new("picture.ppm",256,256,func);
+    let pic = picture::Picture::new("picture.ppm",1024,1024,func);
     pic.print();
 }
 
