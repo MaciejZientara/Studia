@@ -79,7 +79,8 @@ impl Picture {
         let mut val = 0;
         for _attempt in 0..256 {
             if z.abs() > 2.0 {
-                val = 255;//_attempt;
+                // val = 255;
+                val = _attempt;
                 break;
             }
             z = func(&z);
@@ -123,7 +124,17 @@ impl Picture {
         let mut tmp_res = threads.into_iter().map(|h| h.join().unwrap()).collect();
         res_rgb.append(&mut tmp_res);
 
-        Picture{f: MyFile::new(name,x,y,255,res_rgb)}
+        let mut max_val = 0;
+        for _i in 0..x {
+            for _j in 0..y {
+                let id = _i*x+_j;
+                if res_rgb[id as usize].r > max_val{
+                    max_val = res_rgb[id as usize].r + 0;
+                }
+            }
+        }
+
+        Picture{f: MyFile::new(name,x,y,max_val as i32,res_rgb)}
     }
 
     pub fn new_single(name:&str ,x:i32,y:i32,func : fn(&Complex) -> Complex) -> Picture {
@@ -131,14 +142,18 @@ impl Picture {
         let mut rgb_vec: Vec<RGB> = Vec::with_capacity(size as usize);
         let delta_x = 2.0/x as f32;
         let delta_y = 2.0/y as f32;
+        let mut max_val = 0;
         for _i in 0..x {
             for _j in 0..y {
                 rgb_vec.push(RGB::new(0,0,0));
                 let id = _i*x+_j;
-                Self::calculate(&mut rgb_vec[id as usize],Complex::new(-1.0 + (_j as f32)*delta_x,-1.0 + (_i as f32)*delta_y),func)
+                Self::calculate(&mut rgb_vec[id as usize],Complex::new(-1.0 + (_j as f32)*delta_x,-1.0 + (_i as f32)*delta_y),func);
+                if rgb_vec[id as usize].r > max_val{
+                    max_val = rgb_vec[id as usize].r + 0;
+                }
             }
         }
-        Picture{f: MyFile::new(name,x,y,255,rgb_vec)}
+        Picture{f: MyFile::new(name,x,y,max_val as i32,rgb_vec)}
     }
 
     pub fn print(self) {
