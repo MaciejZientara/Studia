@@ -1,8 +1,8 @@
 use std::fs::File;
 use std::io::prelude::*;
 
-use std::process::exit;
 use std::thread;
+use std::thread::JoinHandle;
 use crate::complex::Complex;
 
 // #[derive(Debug)]
@@ -92,6 +92,42 @@ impl Picture {
 
     pub fn new(name:&str ,x:i32,y:i32,func : fn(&Complex) -> Complex) -> Picture {
         let size = x*y;
+        let delta_x = 2.0/x as f32;
+        let delta_y = 2.0/y as f32;
+
+        let max_thread_count = 8 as usize;
+        let mut res_rgb = vec![];
+
+        let mut threads = vec![];
+        for iter in 0..size {
+            let mut elem = RGB::new(0,0,0);
+            if threads.len() == max_thread_count{
+                let mut tmp_res = threads.into_iter().map(|h : JoinHandle<RGB>| h.join().unwrap()).collect();
+                res_rgb.append(&mut tmp_res);
+                threads = vec![];
+            }
+
+            let i = ((iter as i32)/x) as f32;
+            let j = ((iter as i32)%x) as f32;
+            threads.push(
+                thread::spawn(
+                    move || {
+                        Self::calculate(&mut elem,
+                                        Complex::new(-1.0 + j*delta_x,-1.0 + i*delta_y),
+                                        func); 
+                    elem}
+                )
+            );
+        }
+
+        let mut tmp_res = threads.into_iter().map(|h| h.join().unwrap()).collect();
+        res_rgb.append(&mut tmp_res);
+
+        Picture{f: MyFile::new(name,x,y,255,res_rgb)}
+    }
+
+    pub fn new_single(name:&str ,x:i32,y:i32,func : fn(&Complex) -> Complex) -> Picture {
+        let size = x*y;
         let mut rgb_vec: Vec<RGB> = Vec::with_capacity(size as usize);
         let delta_x = 2.0/x as f32;
         let delta_y = 2.0/y as f32;
@@ -102,33 +138,6 @@ impl Picture {
                 Self::calculate(&mut rgb_vec[id as usize],Complex::new(-1.0 + (_j as f32)*delta_x,-1.0 + (_i as f32)*delta_y),func)
             }
         }
-
-        // let max_thread_count = 12000;
-        // if x*y > max_thread_count {
-        //     println!("can't process this many threads!");
-        //     exit(-1);
-        // }
-
-        // let mut threads = vec![];
-        // let mut iter = 0; //type error with rgb_vec.iter().enumerate()
-        // for mut elem in rgb_vec {
-        //     let i = ((iter as i32)/x) as f32;
-        //     let j = ((iter as i32)%x) as f32;
-        //     threads.push(
-        //         thread::spawn(
-        //             move || {
-        //                 Self::calculate(&mut elem,
-        //                                 Complex::new(-1.0 + j*delta_x,-1.0 + i*delta_y),
-        //                                 func); 
-        //             elem}
-        //         )
-        //     );
-        //     iter += 1;
-        // }
-
-        // // wait for threads and re-populate rgb_vec
-        // let rgb_vec : Vec<RGB> = threads.into_iter().map(|h| h.join().unwrap()).collect();
-        
         Picture{f: MyFile::new(name,x,y,255,rgb_vec)}
     }
 
